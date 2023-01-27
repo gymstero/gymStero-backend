@@ -5,28 +5,27 @@ const {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
 } = require('firebase/auth');
 const { collection, addDoc } = require('firebase/firestore');
 const { db } = require('../firebase/config');
 const { User } = require('../model/User');
 
 const auth = getAuth();
-const googleAuthProvider = new GoogleAuthProvider();
 
-router.post('/register', (req, res) => {
-  if (req.body.password1 !== req.body.password2) {
+router.post('/register', async (req, res) => {
+  const email = req.body.email;
+
+  if (req.body.password !== req.body.confirmPassword) {
     res.status(401).json({ message: 'Passwords do not match', code: 401 });
   } else {
     bcrypt
-      .hash(req.body.password1, 10)
+      .hash(req.body.password, 10)
       .then((hash) => {
-        createUserWithEmailAndPassword(auth, req.body.email, hash)
+        createUserWithEmailAndPassword(auth, email, hash)
           .then(async (userCredential) => {
             const ref = collection(db, 'users').withConverter(userConverter);
-            await addDoc(ref, new User(userCredential.user.uid, req.body.email, hash));
-            res.status(201).json({ message: `${req.body.email} has been registered`, code: 201 });
+            await addDoc(ref, new User(userCredential.user.uid, email, hash));
+            res.status(201).json({ message: `${email} has been registered`, code: 201 });
           })
           .catch((error) => {
             const errorMessage = error.message;
@@ -40,22 +39,6 @@ router.post('/register', (req, res) => {
         res.status(500).json({ message: 'Something went wrong while hashing password', code: 500 });
       });
   }
-});
-
-router.get('/register-with-google', (req, res) => {
-  signInWithPopup(auth, googleAuthProvider)
-    .then((result) => {
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const token = credential.accessToken;
-      const user = result.user;
-    })
-    .catch((err) => {
-      const errorMessage = err.message;
-      res.status(500).json({
-        message: errorMessage,
-        code: 500,
-      });
-    });
 });
 
 router.post('/login', (req, res) => {
