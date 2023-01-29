@@ -15,7 +15,6 @@ const {
   limit,
   getCountFromServer,
 } = require('firebase/firestore');
-
 const { db } = require('../firebase/config');
 const { User } = require('../model/User');
 
