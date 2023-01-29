@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const router = express.Router();
+const { getDocs } = require('firebase/firestore');
 const {
   getAuth,
   createUserWithEmailAndPassword,
@@ -13,8 +14,8 @@ const {
   where,
   limit,
   getCountFromServer,
-  getDocs,
 } = require('firebase/firestore');
+
 const { db } = require('../firebase/config');
 const { User } = require('../model/User');
 
