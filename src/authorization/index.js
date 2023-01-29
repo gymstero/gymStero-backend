@@ -12,8 +12,8 @@ const {
   query,
   where,
   limit,
-  getDocs,
   getCountFromServer,
+  getDocs,
 } = require('firebase/firestore');
 const { db } = require('../firebase/config');
 const { User } = require('../model/User');
