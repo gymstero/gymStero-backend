@@ -1,12 +1,14 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const router = express.Router();
+
 const {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signOut,
 } = require('firebase/auth');
-const { collection, addDoc } = require('firebase/firestore');
+const { collection, addDoc, getDocs, query, where } = require('firebase/firestore');
 const { db } = require('../firebase/config');
 const { User } = require('../model/User');
 
@@ -40,17 +42,48 @@ router.post('/register', async (req, res) => {
       });
   }
 });
+/*---------------------------------------------------*/
+//login
+router.post('/login', async (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  try {
+    const userCheck = await getDocs(query(collection(db, 'users'), where('email', '==', email)));
+    if (userCheck.size !== 1) {
+      return res.status(404).json({ message: 'User Does Not Exist' });
+    }
+    let hashedPassword;
+    userCheck.forEach((user) => {
+      hashedPassword = user.data().password;
+    });
 
-router.post('/login', (req, res) => {
-  signInWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      // Signed in
+    const isMatch = await bcrypt.compare(password, hashedPassword);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Wrong Password' });
+    } else {
+      await signInWithEmailAndPassword(auth, email, hashedPassword);
+      res.json({ message: 'Login successful!' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/*------------------------------------*/
+//log out
+router.post('/logout', (req, res) => {
+  auth
+    .signOut()
+    .then(() => {
+      res.json({ message: 'Log out successful!' });
+      res.redirect('/login');
     })
     .catch((error) => {
-      const errorMessage = error.message;
+      res.status(500).json({ error: error.message });
     });
 });
 
+/*---------------------------------------------------*/
 const userConverter = {
   toFirestore: (user) => {
     return {
