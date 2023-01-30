@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const router = express.Router();
+const { getDocs } = require('firebase/firestore');
 const {
   getAuth,
   createUserWithEmailAndPassword,
@@ -80,5 +81,47 @@ const userConverter = {
     return new User(data.id, data.email, data.password, data.photoURL);
   },
 };
+
+/*---------------------------------------------------*/
+//login
+router.post('/login', async (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  try {
+    const userCheck = await getDocs(query(collection(db, 'users'), where('email', '==', email)));
+    if (userCheck.size !== 1) {
+      return res.status(404).json({ message: 'User Does Not Exist' });
+    }
+    let hashedPassword;
+    userCheck.forEach((user) => {
+      hashedPassword = user.data().password;
+    });
+
+    const isMatch = await bcrypt.compare(password, hashedPassword);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Wrong Password' });
+    } else {
+      await signInWithEmailAndPassword(auth, email, hashedPassword);
+      res.json({ message: 'Login successful!' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/*------------------------------------*/
+//log out
+router.post('/logout', (req, res) => {
+  auth
+    .signOut()
+    .then(() => {
+      res.json({ message: 'Log out successful!' });
+    })
+    .catch((error) => {
+      res.status(500).json({ error: error.message });
+    });
+});
+
+/*---------------------------------------------------*/
 
 module.exports = router;
