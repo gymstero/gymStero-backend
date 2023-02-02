@@ -1,6 +1,5 @@
 const { initializeApp } = require('firebase/app');
 const { getFirestore } = require('firebase/firestore');
-const { getAnalytics } = require('firebase/analytics');
 const admin = require('firebase-admin');
 const serviceAccount = require('../../serviceAccountKey.json');
 require('dotenv').config();
@@ -19,6 +18,5 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-//const analytics = getAnalytics(app);
 
 module.exports = { app, db };

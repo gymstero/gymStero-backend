@@ -41,6 +41,25 @@ router.post('/register', async (req, res) => {
       });
   }
 });
+
+router.post('/register-with-google', async (req, res) => {
+  const { uid, email, photoURL } = req.body;
+  try {
+    const q = query(collection(db, 'users'), where('email', '==', email), limit(1));
+    const snapshot = await getCountFromServer(q);
+
+    if (snapshot.data().count > 0) {
+      console.log(`User ${email} already exists`);
+    } else {
+      const ref = collection(db, 'users').withConverter(userConverter);
+      await addDoc(ref, new User(uid, email, '', photoURL));
+      console.log(`User ${email} stored in Firestore`);
+    }
+  } catch (err) {
+    console.error('Something went wrong while storing user info in Firestore', err);
+  }
+});
+
 router.post('/login', async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
