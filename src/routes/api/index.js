@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 
-//workout
+router.use('/user', require('./setting'));
 
-//schedule
+// router.use('/workout', require('./workout'));
 
-//run workout
+// router.use('/schedule', require('./schedule'));
+
+// router.use('/run-workout', require('./run-workout'));
 
 module.exports = router;

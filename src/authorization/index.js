@@ -1,13 +1,21 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
 const router = express.Router();
+const bcrypt = require('bcrypt');
 const {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
 } = require('firebase/auth');
-const { collection, addDoc, getDocs, query, where } = require('firebase/firestore');
+const {
+  collection,
+  addDoc,
+  getDocs,
+  getCountFromServer,
+  query,
+  where,
+  limit,
+} = require('firebase/firestore');
 const { db } = require('../firebase/config');
 const { User } = require('../model/User');
 
@@ -53,7 +61,7 @@ router.post('/register-with-google', async (req, res) => {
     } else {
       const ref = collection(db, 'users').withConverter(userConverter);
       await addDoc(ref, new User(uid, email, '', photoURL));
-      console.log(`User ${email} stored in Firestore`);
+      console.log(`User ${email} info stored in Firestore`);
     }
   } catch (err) {
     console.error('Something went wrong while storing user info in Firestore', err);
@@ -75,13 +83,13 @@ router.post('/login', async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, hashedPassword);
     if (!isMatch) {
-        return res.status(401).json({ code: 401, message: 'Wrong Password' });
-      } else {
-        await signInWithEmailAndPassword(auth, email, hashedPassword);
-        res.status(200).json({ code: 200, message: 'Login successful!' });
-      }
+      return res.status(401).json({ code: 401, message: 'Wrong Password' });
+    } else {
+      await signInWithEmailAndPassword(auth, email, hashedPassword);
+      res.status(200).json({ code: 200, message: 'Login successful!' });
+    }
   } catch (error) {
-    res.status(500).json({ code: 500, error: error.message });
+    res.status(500).json({ code: 500, message: error.message });
   }
 });
 
@@ -104,11 +112,23 @@ const userConverter = {
       id: user.id,
       email: user.email,
       password: user.password,
+      photoURL: user.photoURL,
+      username: user.username,
+      description: user.description,
+      publicUser: user.publicUser,
     };
   },
   fromFirestore: (snapshot, options) => {
     const data = snapshot.data(options);
-    return new User(data.id, data.email, data.password);
+    return new User(
+      data.id,
+      data.email,
+      data.password,
+      data.photoURL,
+      data.username,
+      data.description,
+      data.publicUser
+    );
   },
 };
 
