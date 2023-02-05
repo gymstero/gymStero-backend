@@ -11,4 +11,3 @@ router.use('/user', require('../authorization'));
 router.use(`/api`, authenticate, require('./api'));
 
 module.exports = router;
-

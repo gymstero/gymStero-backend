@@ -50,7 +50,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/register-with-google', async (req, res) => {
+router.post('/signin-with-google', async (req, res) => {
   const { uid, email, photoURL } = req.body;
   try {
     const q = query(collection(db, 'users'), where('email', '==', email), limit(1));
@@ -105,7 +105,6 @@ router.post('/logout', (req, res) => {
     });
 });
 
-/*---------------------------------------------------*/
 const userConverter = {
   toFirestore: (user) => {
     return {
@@ -116,6 +115,8 @@ const userConverter = {
       username: user.username,
       description: user.description,
       publicUser: user.publicUser,
+      numOfFollowers: user.numOfFollowers,
+      workouts: user.workouts,
     };
   },
   fromFirestore: (snapshot, options) => {
@@ -127,7 +128,9 @@ const userConverter = {
       data.photoURL,
       data.username,
       data.description,
-      data.publicUser
+      data.publicUser,
+      data.numOfFollowers,
+      data.workouts
     );
   },
 };
