@@ -54,4 +54,18 @@ router.get('/:id/profile', async (req, res) => {
   }
 });
 
+router.get('/:id/workouts', async (req, res) => {
+  try {
+    const querySnapshot = await getDocs(
+      query(collection(db, 'users'), where('id', '==', req.params.id))
+    );
+    querySnapshot.forEach((doc) => {
+      exercises.push(doc.data());
+    });
+    res.status(200).json({ code: 200, message: 'Exercise data sent successfully', exercises });
+  } catch (err) {
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
 module.exports = router;
