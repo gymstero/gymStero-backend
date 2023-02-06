@@ -34,4 +34,24 @@ router.put('/:id/setting', async (req, res) => {
   }
 });
 
+router.get('/:id/profile', async (req, res) => {
+  try {
+    const querySnapshot = await getDocs(
+      query(collection(db, 'users'), where('id', '==', req.params.id))
+    );
+    let userData;
+    querySnapshot.forEach((doc) => {
+      userData = doc.data();
+    });
+    //plus workouts
+
+    res
+      .status(200)
+      .json({ code: 200, message: 'User profile sent successfully', userData: userData });
+  } catch (error) {
+    console.error('Could not get user profile from Firestore', error);
+    res.status(500).json({ code: 500, message: error.message });
+  }
+});
+
 module.exports = router;

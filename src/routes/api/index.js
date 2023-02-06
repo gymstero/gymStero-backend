@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-router.use('/user', require('./setting'));
+router.use('/user', require('./user'));
 
-// router.use('/workout', require('./workout'));
+router.use('/workout', require('./workout'));
 
 // router.use('/schedule', require('./schedule'));
 
