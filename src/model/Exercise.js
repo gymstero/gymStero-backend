@@ -1,6 +1,5 @@
 class Exercise {
-  constructor(id, title, description, instructions, muscleGroup, exerciseType) {
-    this.id = id;
+  constructor(title, description, instructions, muscleGroup, exerciseType) {
     this.title = title;
     this.description = description;
     this.instructions = instructions;

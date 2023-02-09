@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { collection, doc, getDocs, setDoc, query, where } = require('firebase/firestore');
+const { collection, doc, getDocs, setDoc, query, where, addDoc } = require('firebase/firestore');
 const { db } = require('../../firebase/config');
+const { Workout } = require('../../model/Workout');
 
 router.get('/:id/setting', async (req, res) => {
   try {
@@ -54,6 +55,7 @@ router.get('/:id/profile', async (req, res) => {
   }
 });
 
+//Need test
 router.get('/:id/workouts', async (req, res) => {
   try {
     const querySnapshot = await getDocs(
@@ -67,5 +69,18 @@ router.get('/:id/workouts', async (req, res) => {
     res.status(500).json({ code: 500, message: err.message });
   }
 });
+
+router.post('/:id/workout', async (req, res) => {
+  try {
+    const ref = collection(db, 'workouts'); //.withConverter(workoutConverter)
+    await addDoc(ref, new Workout()); //Need schema
+    console.log(`Workout for ${email} has been created`);
+    res.status(201).json({ code: 201, message: 'Workout has been created successfully' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ code: 500, message: 'Something went wrong while adding workout to DB' });
+  }
+});
+
 
 module.exports = router;
