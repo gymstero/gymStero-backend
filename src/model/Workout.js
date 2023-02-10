@@ -23,18 +23,15 @@ const Day = {
 };
 
 class Workout {
-  constructor(id, title) {
-    this.id = id;
+  constructor(title, exerciseGoals) {
     this.title = title;
-    this.exerciseGoals = [];
-    this.startDate;
-    this.endDate;
-    this.routine;
+    this.exerciseGoals = exerciseGoals;
+    this.startDate = 'today';
+    this.endDate = 'tomorrow';
+    this.routine = 'once';
     this.daysWhenWeekly = [];
-    this.reminder;
+    this.reminder = '10 mins before';
   }
 }
 
-module.exports.Workout = Workout;
-
-module.exports = { Routine, Reminder, Day };
+module.exports = { Workout, Routine, Reminder, Day };
