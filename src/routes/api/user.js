@@ -79,7 +79,11 @@ router.get('/:id/workouts', async (req, res) => {
       where(documentId(), 'in', user.workouts)
     );
     const workoutQuerySnapshot = await getDocs(workoutQuery);
-    workoutQuerySnapshot.forEach((doc) => workouts.push(doc.data()));
+    workoutQuerySnapshot.forEach((doc) => {
+      let workout = doc.data();
+      workout.id = doc.id;
+      workouts.push(workout);
+    });
 
     res.status(200).json({
       code: 200,
