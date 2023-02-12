@@ -10,8 +10,9 @@ const {
   limit,
   addDoc,
   documentId,
+  getDoc,
 } = require('firebase/firestore');
-const { db, admin } = require('../../firebase/config');
+const { db } = require('../../firebase/config');
 const { Workout } = require('../../model/Workout');
 
 router.get('/:id/setting', async (req, res) => {
@@ -93,6 +94,7 @@ router.get('/:id/workouts', async (req, res) => {
 router.post('/:id/workout', async (req, res) => {
   const { title, exerciseGoals } = req.body;
   let user;
+  const createdAt = new Date().toISOString();
   try {
     const ref = collection(db, 'workouts').withConverter(workoutConverter);
     const result = await addDoc(ref, new Workout(title, exerciseGoals));
@@ -115,6 +117,22 @@ router.post('/:id/workout', async (req, res) => {
   }
 });
 
+router.get('/:id/workout/:id', async (req, res) => {
+  try {
+    const workout = await (await getDoc(doc(db, 'workouts', req.params.id))).data();
+    res.status(200).json({ code: 200, message: 'Workout sent successfully', workout });
+  } catch (err) {
+    console.error(err.message);
+    res
+      .status(500)
+      .json({ code: 500, message: 'Something went wrong while fetching workout from DB' });
+  }
+});
+
+router.put('/:id/workout/:id', async (req, res) => {});
+
+router.delete('/:id/workout/:id', async (req, res) => {});
+
 const workoutConverter = {
   toFirestore: (workout) => {
     return {
@@ -125,6 +143,7 @@ const workoutConverter = {
       routine: workout.routine,
       daysWhenWeekly: workout.daysWhenWeekly,
       reminder: workout.reminder,
+      createdAt: workout.createdAt,
     };
   },
   fromFirestore: (snapshot, options) => {
@@ -136,7 +155,8 @@ const workoutConverter = {
       data.endDate,
       data.routine,
       data.daysWhenWeekly,
-      data.reminder
+      data.reminder,
+      data.createdAt
     );
   },
 };
