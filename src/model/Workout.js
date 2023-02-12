@@ -31,6 +31,7 @@ class Workout {
     this.routine = 'once';
     this.daysWhenWeekly = [];
     this.reminder = '10 mins before';
+    this.createdAt = new Date().toISOString();
   }
 }
 
