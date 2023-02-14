@@ -100,6 +100,7 @@ router.get('/:id/workouts', async (req, res) => {
 router.post('/:id/workout', async (req, res) => {
   const { title, exerciseGoals } = req.body;
   let user;
+  const createdAt = new Date().toISOString();
   try {
     const ref = collection(db, 'workouts').withConverter(workoutConverter);
     const result = await addDoc(ref, new Workout(title, exerciseGoals));
