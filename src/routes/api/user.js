@@ -11,6 +11,7 @@ const {
   addDoc,
   documentId,
   getDoc,
+  deleteDoc,
 } = require('firebase/firestore');
 const { db } = require('../../firebase/config');
 const { Workout } = require('../../model/Workout');
@@ -47,6 +48,7 @@ router.put('/:id/setting', async (req, res) => {
 });
 
 router.get('/:id/profile', async (req, res) => {
+  console.log('GET /user/id/profile requested');
   try {
     const querySnapshot = await getDocs(
       query(collection(db, 'users'), where('id', '==', req.params.id))
@@ -55,7 +57,6 @@ router.get('/:id/profile', async (req, res) => {
     querySnapshot.forEach((doc) => {
       userData = doc.data();
     });
-    //plus workouts
 
     res
       .status(200)
@@ -67,6 +68,7 @@ router.get('/:id/profile', async (req, res) => {
 });
 
 router.get('/:id/workouts', async (req, res) => {
+  console.log('GET /user/id/workouts requested');
   let user;
   let workouts = [];
   try {
@@ -113,7 +115,7 @@ router.post('/:id/workout', async (req, res) => {
       workouts: user.workouts,
     });
 
-    console.log(`Workout for ${result.id} has been created`);
+    console.info(`Workout for ${result.id} has been created`);
     res.status(201).json({ code: 201, message: 'Workout has been created successfully' });
   } catch (err) {
     console.error(err.message);
@@ -133,9 +135,40 @@ router.get('/:id/workout/:id', async (req, res) => {
   }
 });
 
-router.put('/:id/workout/:id', async (req, res) => {});
+router.put('/:userId/workout/:workoutId', async (req, res) => {
+  try {
+    res.status(200).json({ code: 200, message: 'Workout updated successfully' });
+  } catch (err) {
+    console.error(err.message);
+    res
+      .status(500)
+      .json({ code: 500, message: 'Something went wrong while updating workout in DB' });
+  }
+});
 
-router.delete('/:id/workout/:id', async (req, res) => {});
+router.delete('/:userId/workout/:workoutId', async (req, res) => {
+  console.info('DELETE /user/id/workout/id requested');
+  try {
+    let userData = await (await getDoc(doc(db, 'users', req.params.userId))).data();
+
+    const index = userData.workouts.indexOf(req.params.workoutId);
+    if (index !== -1) {
+      userData.workouts.splice(index, 1);
+    }
+
+    await setDoc(doc(db, 'users', userData.id), {
+      ...userData,
+    });
+
+    await deleteDoc(doc(db, 'workouts', req.params.workoutId));
+    res.status(200).json({ code: 200, message: 'Workout deleted' });
+  } catch (err) {
+    console.error(err.message);
+    res
+      .status(500)
+      .json({ code: 500, message: 'Something went wrong while deleting workout in DB' });
+  }
+});
 
 const workoutConverter = {
   toFirestore: (workout) => {
