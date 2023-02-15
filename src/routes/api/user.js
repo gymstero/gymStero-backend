@@ -71,6 +71,7 @@ router.get('/:id/workouts', async (req, res) => {
   console.log('GET /user/id/workouts requested');
   let user;
   let workouts = [];
+
   try {
     const userQuery = query(collection(db, 'users'), where('id', '==', req.params.id), limit(1));
     const userQuerySnapshot = await getDocs(userQuery);
