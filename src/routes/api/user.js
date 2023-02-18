@@ -70,6 +70,7 @@ router.get('/:id/profile', async (req, res) => {
 router.get('/:id/workouts', async (req, res) => {
   console.log('GET /user/id/workouts requested');
   let user;
+  let workoutIds = [];
   let workouts = [];
 
   try {
@@ -79,12 +80,12 @@ router.get('/:id/workouts', async (req, res) => {
 
     if (user.workouts.length > 10) {
       const startIndex = user.workouts.length - 10;
-      workouts = user.workouts.splice(startIndex);
+      workoutIds = user.workouts.splice(startIndex);
     } else {
-      workouts = user.workouts;
+      workoutIds = user.workouts;
     }
 
-    const workoutQuery = query(collection(db, 'workouts'), where(documentId(), 'in', workouts));
+    const workoutQuery = query(collection(db, 'workouts'), where(documentId(), 'in', workoutIds));
     const workoutQuerySnapshot = await getDocs(workoutQuery);
     workoutQuerySnapshot.forEach((doc) => {
       let workout = doc.data();
