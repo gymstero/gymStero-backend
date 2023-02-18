@@ -123,47 +123,68 @@ router.post('/:id/exercise-goal', async (req, res) => {
   }
 });
 
+router.put('/exercise-goal/:id', async (req, res) => {
+  console.info('PUT /api/workout/exercise-goal/:id requested');
+  const exerciseGoalData = req.body;
+  try {
+    await setDoc(doc(db, 'exerciseGoals', req.params.id), {
+      ...exerciseGoalData,
+    });
+
+    res.status(200).json({
+      code: 200,
+      message: `Exercise goal ${req.params.id} updated successfully`,
+    });
+  } catch (err) {
+    console.warn(err);
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
 router.get('/:id/exercise-goals', async (req, res) => {
   console.info('GET /api/workout/:id/exercise-goals requested');
   let exerciseGoals = [];
-let exercises = [];
-let exerciseIds = [];
+  let exercises = [];
+  let exerciseIds = [];
 
-try {
-  const workoutSnapshot = await getDoc(doc(db, 'workouts', req.params.id));
-  const workout = workoutSnapshot.data();
+  try {
+    const workoutSnapshot = await getDoc(doc(db, 'workouts', req.params.id));
+    const workout = workoutSnapshot.data();
 
-  const exerciseGoalQuery = query(
-    collection(db, 'exerciseGoals'),
-    where(documentId(), 'in', workout.exerciseGoals)
-  );
-  const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);
+    const exerciseGoalQuery = query(
+      collection(db, 'exerciseGoals'),
+      where(documentId(), 'in', workout.exerciseGoals)
+    );
+    const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);
 
-  exerciseGoalSnapshot.forEach((each) => {
-    let exerciseGoal = each.data();
-    exerciseGoal.id = each.id;
-    exerciseIds.push(exerciseGoal.exerciseId);
-    exerciseGoals.push(exerciseGoal);
-  });
+    exerciseGoalSnapshot.forEach((each) => {
+      let exerciseGoal = each.data();
+      exerciseGoal.id = each.id;
+      exerciseIds.push(exerciseGoal.exerciseId);
+      exerciseGoals.push(exerciseGoal);
+    });
 
-  const exerciseQuery = query(collection(db, 'exercises'), where(documentId(), 'in', exerciseIds));
-  const exerciseSnapshot = await getDocs(exerciseQuery);
-  exerciseSnapshot.forEach((each) => {
-    let exercise = each.data();
-    exercise.id = each.id;
-    exercises.push(exercise);
-  });
+    const exerciseQuery = query(
+      collection(db, 'exercises'),
+      where(documentId(), 'in', exerciseIds)
+    );
+    const exerciseSnapshot = await getDocs(exerciseQuery);
+    exerciseSnapshot.forEach((each) => {
+      let exercise = each.data();
+      exercise.id = each.id;
+      exercises.push(exercise);
+    });
 
-  exerciseGoals.map(
-    (exerciseGoal) =>
-      (exerciseGoal.exerciseInfo = exercises.find((e) => e.id === exerciseGoal.exerciseId))
-  );
-  console.log(exerciseGoals);
-  res.status(200).json({ code: 200, message: 'Exercise goals sent successfully', exerciseGoals });
-} catch (err) {
-  console.warn(err);
-  res.status(500).json({ code: 500, message: err.message });
-}
+    exerciseGoals.map(
+      (exerciseGoal) =>
+        (exerciseGoal.exerciseInfo = exercises.find((e) => e.id === exerciseGoal.exerciseId))
+    );
+    console.log(exerciseGoals);
+    res.status(200).json({ code: 200, message: 'Exercise goals sent successfully', exerciseGoals });
+  } catch (err) {
+    console.warn(err);
+    res.status(500).json({ code: 500, message: err.message });
+  }
 });
 
 const exerciseGoalConverter = {
