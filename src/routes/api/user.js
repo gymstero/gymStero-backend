@@ -71,15 +71,18 @@ router.get('/:id/workouts', async (req, res) => {
   console.log('GET /user/id/workouts requested');
   let user;
   let workouts = [];
+
   try {
     const userQuery = query(collection(db, 'users'), where('id', '==', req.params.id), limit(1));
     const userQuerySnapshot = await getDocs(userQuery);
     userQuerySnapshot.forEach((doc) => (user = doc.data()));
 
-    const workoutQuery = query(
-      collection(db, 'workouts'),
-      where(documentId(), 'in', user.workouts)
-    );
+    if (user.workouts.length > 10) {
+      const startIndex = user.workouts.length - 10;
+      workouts = user.workouts.splice(startIndex);
+    }
+
+    const workoutQuery = query(collection(db, 'workouts'), where(documentId(), 'in', workouts));
     const workoutQuerySnapshot = await getDocs(workoutQuery);
     workoutQuerySnapshot.forEach((doc) => {
       let workout = doc.data();
@@ -93,6 +96,7 @@ router.get('/:id/workouts', async (req, res) => {
       workouts,
     });
   } catch (err) {
+    console.warn(err);
     res.status(500).json({ code: 500, message: err.message });
   }
 });
@@ -100,7 +104,7 @@ router.get('/:id/workouts', async (req, res) => {
 router.post('/:id/workout', async (req, res) => {
   const { title, exerciseGoals } = req.body;
   let user;
-  const createdAt = new Date().toISOString();
+
   try {
     const ref = collection(db, 'workouts').withConverter(workoutConverter);
     const result = await addDoc(ref, new Workout(title, exerciseGoals));
@@ -123,9 +127,12 @@ router.post('/:id/workout', async (req, res) => {
   }
 });
 
-router.get('/:id/workout/:id', async (req, res) => {
+router.get('/:id/workout/:workoutId', async (req, res) => {
+  console.info('GET /api/user/:userId/workout/:workoutId requested');
   try {
-    const workout = await (await getDoc(doc(db, 'workouts', req.params.id))).data();
+    const snapshot = await getDoc(doc(db, 'workouts', req.params.workoutId));
+    const workout = snapshot.data();
+
     res.status(200).json({ code: 200, message: 'Workout sent successfully', workout });
   } catch (err) {
     console.error(err.message);
@@ -136,6 +143,7 @@ router.get('/:id/workout/:id', async (req, res) => {
 });
 
 router.put('/:userId/workout/:workoutId', async (req, res) => {
+  console.info('PUT /api/user/:userId/workout/:workoutId requested');
   try {
     res.status(200).json({ code: 200, message: 'Workout updated successfully' });
   } catch (err) {
@@ -149,7 +157,7 @@ router.put('/:userId/workout/:workoutId', async (req, res) => {
 router.delete('/:userId/workout/:workoutId', async (req, res) => {
   console.info('DELETE /user/id/workout/id requested');
   try {
-    let userData = await (await getDoc(doc(db, 'users', req.params.userId))).data();
+    let userData = await getDoc(doc(db, 'users', req.params.userId)).data();
 
     const index = userData.workouts.indexOf(req.params.workoutId);
     if (index !== -1) {
