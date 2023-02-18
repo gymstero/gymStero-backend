@@ -76,7 +76,6 @@ router.get('/:id/workouts', async (req, res) => {
     const userQuery = query(collection(db, 'users'), where('id', '==', req.params.id), limit(1));
     const userQuerySnapshot = await getDocs(userQuery);
     userQuerySnapshot.forEach((doc) => (user = doc.data()));
-    console.log('USER', user);
 
     if (user.workouts.length > 10) {
       const startIndex = user.workouts.length - 10;
@@ -160,7 +159,8 @@ router.put('/:userId/workout/:workoutId', async (req, res) => {
 router.delete('/:userId/workout/:workoutId', async (req, res) => {
   console.info('DELETE /user/id/workout/id requested');
   try {
-    let userData = await getDoc(doc(db, 'users', req.params.userId)).data();
+    let snapshot = await getDoc(doc(db, 'users', req.params.userId));
+    let userData = snapshot.data();
 
     const index = userData.workouts.indexOf(req.params.workoutId);
     if (index !== -1) {
@@ -172,7 +172,7 @@ router.delete('/:userId/workout/:workoutId', async (req, res) => {
     });
 
     await deleteDoc(doc(db, 'workouts', req.params.workoutId));
-    res.status(200).json({ code: 200, message: 'Workout deleted' });
+    res.status(200).json({ code: 200, message: `Workout ${req.params.workoutId} deleted` });
   } catch (err) {
     console.error(err.message);
     res
