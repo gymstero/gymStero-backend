@@ -1,6 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { getDocs, collection, query, where, doc, getDoc, addDoc } = require('firebase/firestore');
+const {
+  getDocs,
+  collection,
+  query,
+  where,
+  doc,
+  getDoc,
+  addDoc,
+  setDoc,
+} = require('firebase/firestore');
 const { db } = require('../../firebase/config');
 const { ExerciseGoal } = require('../../model/ExerciseGoal');
 
@@ -81,6 +90,32 @@ router.get('/exercise-goal/:id', async (req, res) => {
       message: `Exercise goal ${req.params.id} sent successfully`,
       exerciseGoal,
     });
+  } catch (err) {
+    console.warn(err);
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
+router.post('/:id/exercise-goal', async (req, res) => {
+  console.info('POST /api/workout/:id/exercise-goal requested');
+  const { exerciseId, targetSets, targetReps, targetWeight, estimatedTime, comment } = req.body;
+
+  try {
+    const ref = collection(db, 'exerciseGoals').withConverter(exerciseGoalConverter);
+    const result = await addDoc(
+      ref,
+      new ExerciseGoal(exerciseId, targetSets, targetReps, targetWeight, estimatedTime, comment)
+    );
+
+    const snapshot = await getDoc(doc(db, 'workouts', req.params.id));
+    let workout = snapshot.data();
+    workout.exerciseGoals.push(result.id);
+
+    await setDoc(doc(db, 'workouts', req.params.id), {
+      ...workout,
+    });
+
+    res.status(201).json({ code: 201, message: 'Exercise goal is created', id: result.id });
   } catch (err) {
     console.warn(err);
     res.status(500).json({ code: 500, message: err.message });
