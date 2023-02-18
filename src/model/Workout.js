@@ -1,3 +1,16 @@
+class Workout {
+  constructor(title, exerciseGoals) {
+    this.title = title;
+    this.exerciseGoals = exerciseGoals;
+    this.startDate = 'today';
+    this.endDate = 'tomorrow';
+    this.routine = 'once';
+    this.daysWhenWeekly = [];
+    this.reminder = '10 mins before';
+    this.createdAt = new Date().toISOString();
+  }
+}
+
 const Routine = {
   Daily: 'Every Day',
   Weekly: 'Every Week',
@@ -21,18 +34,5 @@ const Day = {
   Saturday: 'Saturday',
   Sunday: 'Sunday',
 };
-
-class Workout {
-  constructor(title, exerciseGoals) {
-    this.title = title;
-    this.exerciseGoals = exerciseGoals;
-    this.startDate = 'today';
-    this.endDate = 'tomorrow';
-    this.routine = 'once';
-    this.daysWhenWeekly = [];
-    this.reminder = '10 mins before';
-    this.createdAt = new Date().toISOString();
-  }
-}
 
 module.exports = { Workout, Routine, Reminder, Day };

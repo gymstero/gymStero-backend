@@ -1,14 +1,12 @@
 class ExerciseGoal {
-  constructor(exerciseId, targetSets, targetReps, targetWeight, estimatedTime) {
+  constructor(exerciseId, targetSets, targetReps, targetWeight, estimatedTime, comment) {
     this.exerciseId = exerciseId;
     this.targetSets = targetSets;
     this.targetReps = targetReps;
     this.targetWeight = targetWeight;
     this.estimatedTime = estimatedTime;
-    //HI
-    //CARDIO
-    //BODYWEIGHT
+    this.comment = comment;
   }
 }
 
-module.exports.Exercise = ExerciseGoal;
+module.exports.ExerciseGoal = ExerciseGoal;
