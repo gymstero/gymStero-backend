@@ -149,8 +149,15 @@ router.get('/:id/workout/:workoutId', async (req, res) => {
 
 router.put('/:userId/workout/:workoutId', async (req, res) => {
   console.info('PUT /api/user/:userId/workout/:workoutId requested');
+  const workoutData = req.body;
   try {
-    res.status(200).json({ code: 200, message: 'Workout updated successfully' });
+    await setDoc(doc(db, 'workouts', req.params.workoutId), {
+      ...workoutData,
+    });
+
+    res
+      .status(200)
+      .json({ code: 200, message: `Workout ${req.params.workoutId} updated successfully` });
   } catch (err) {
     console.error(err.message);
     res
