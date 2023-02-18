@@ -123,7 +123,9 @@ router.post('/:id/workout', async (req, res) => {
     });
 
     console.info(`Workout for ${result.id} has been created`);
-    res.status(201).json({ code: 201, message: 'Workout has been created successfully' });
+    res
+      .status(201)
+      .json({ code: 201, message: 'Workout has been created successfully', id: result.id });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ code: 500, message: 'Something went wrong while adding workout to DB' });
