@@ -76,10 +76,13 @@ router.get('/:id/workouts', async (req, res) => {
     const userQuery = query(collection(db, 'users'), where('id', '==', req.params.id), limit(1));
     const userQuerySnapshot = await getDocs(userQuery);
     userQuerySnapshot.forEach((doc) => (user = doc.data()));
+    console.log('USER', user);
 
     if (user.workouts.length > 10) {
       const startIndex = user.workouts.length - 10;
       workouts = user.workouts.splice(startIndex);
+    } else {
+      workouts = user.workouts;
     }
 
     const workoutQuery = query(collection(db, 'workouts'), where(documentId(), 'in', workouts));
