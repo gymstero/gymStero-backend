@@ -9,6 +9,7 @@ const {
   getDoc,
   addDoc,
   setDoc,
+  documentId,
 } = require('firebase/firestore');
 const { db } = require('../../firebase/config');
 const { ExerciseGoal } = require('../../model/ExerciseGoal');
@@ -116,6 +117,32 @@ router.post('/:id/exercise-goal', async (req, res) => {
     });
 
     res.status(201).json({ code: 201, message: 'Exercise goal is created', id: result.id });
+  } catch (err) {
+    console.warn(err);
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
+router.get('/:id/exercise-goals', async (req, res) => {
+  console.info('GET /api/workout/:id/exercise-goals requested');
+  let exerciseGoals = [];
+
+  try {
+    const workoutSnapshot = await getDoc(doc(db, 'workouts', req.params.id));
+    const workout = workoutSnapshot.data();
+
+    const exerciseGoalQuery = query(
+      collection(db, 'exerciseGoals'),
+      where(documentId(), 'in', workout.exerciseGoals)
+    );
+    const snapshot = await getDocs(exerciseGoalQuery);
+    snapshot.forEach((doc) => {
+      let exerciseGoal = doc.data();
+      exerciseGoal.id = doc.id;
+      exerciseGoals.push(exerciseGoal);
+    });
+
+    res.status(200).json({ code: 200, message: 'Exercise goals sent successfully', exerciseGoals });
   } catch (err) {
     console.warn(err);
     res.status(500).json({ code: 500, message: err.message });
