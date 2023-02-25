@@ -150,6 +150,7 @@ router.get('/:id/workout/:workoutId', async (req, res) => {
 router.put('/:userId/workout/:workoutId', async (req, res) => {
   console.info('PUT /api/user/:userId/workout/:workoutId requested');
   try {
+    //CAN BE REMOVED
     res.status(200).json({ code: 200, message: 'Workout updated successfully' });
   } catch (err) {
     console.error(err.message);
@@ -195,6 +196,8 @@ const workoutConverter = {
       daysWhenWeekly: workout.daysWhenWeekly,
       reminder: workout.reminder,
       createdAt: workout.createdAt,
+      schedule: workout.schedule,
+      totalWorkoutTime: workout.totalWorkoutTime,
     };
   },
   fromFirestore: (snapshot, options) => {
@@ -207,7 +210,9 @@ const workoutConverter = {
       data.routine,
       data.daysWhenWeekly,
       data.reminder,
-      data.createdAt
+      data.createdAt,
+      data.schedule,
+      data.totalWorkoutTime
     );
   },
 };

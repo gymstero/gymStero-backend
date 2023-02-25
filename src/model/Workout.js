@@ -8,6 +8,8 @@ class Workout {
     this.daysWhenWeekly = [];
     this.reminder = '10 mins before';
     this.createdAt = new Date().toISOString();
+    this.schedule = [];
+    this.totalWorkoutTime = 0;
   }
 }
 
@@ -22,7 +24,6 @@ const Reminder = {
   Morning: '9am on the day',
   Noon: '12pm on the day',
   Evening: '6pm of the day',
-  //Custom: '',
 };
 
 const Day = {
