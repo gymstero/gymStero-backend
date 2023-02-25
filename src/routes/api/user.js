@@ -202,6 +202,8 @@ const workoutConverter = {
       daysWhenWeekly: workout.daysWhenWeekly,
       reminder: workout.reminder,
       createdAt: workout.createdAt,
+      schedule: workout.schedule,
+      totalWorkoutTime: workout.totalWorkoutTime,
     };
   },
   fromFirestore: (snapshot, options) => {
@@ -214,7 +216,9 @@ const workoutConverter = {
       data.routine,
       data.daysWhenWeekly,
       data.reminder,
-      data.createdAt
+      data.createdAt,
+      data.schedule,
+      data.totalWorkoutTime
     );
   },
 };

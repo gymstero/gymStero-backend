@@ -14,7 +14,7 @@ const {
 } = require('firebase/firestore');
 const { db } = require('../../firebase/config');
 const { ExerciseGoal } = require('../../model/ExerciseGoal');
-const { Workout } = require('../../model/Workout');
+const { getSchedule } = require('../../helper/helper');
 
 router.get('/exercises', async (req, res) => {
   console.info('GET /api/workout/exercise requested');
@@ -109,7 +109,6 @@ router.post('/:id/exercise-goal', async (req, res) => {
       ref,
       new ExerciseGoal(exerciseId, targetSets, targetReps, targetWeight, estimatedTime, comment)
     );
-
     const snapshot = await getDoc(doc(db, 'workouts', req.params.id));
     let workout = snapshot.data();
     workout.exerciseGoals.push(result.id);
@@ -117,8 +116,9 @@ router.post('/:id/exercise-goal', async (req, res) => {
     await setDoc(doc(db, 'workouts', req.params.id), {
       ...workout,
     });
+    console.log(workout);
 
-    res.status(201).json({ code: 201, message: 'Exercise goal is created', id: result.id });
+    res.status(201).json({ code: 201, message: 'Exercise goal is created', workout });
   } catch (err) {
     console.warn(err);
     res.status(500).json({ code: 500, message: err.message });
@@ -249,6 +249,27 @@ router.put('/:id/', async (req, res) => {
     });
 
     res.status(200).json({ code: 200, message: `Workout plan ${req.params.id} updated` });
+  } catch (err) {
+    console.warn(err);
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
+router.put('/:id/schedule', async (req, res) => {
+  console.info('PUT /api/workout/:id/schedule requested');
+  const workoutData = req.body;
+
+  try {
+    const schedule = getSchedule(workoutData);
+    (workoutData.schedule = schedule), (workoutData.totalWorkoutTime = '1h');
+
+    await setDoc(doc(db, 'workouts', req.params.id), {
+      ...workoutData,
+    });
+
+    res
+      .status(200)
+      .json({ code: 200, message: 'Workout schedule has been updated successfully', workoutData });
   } catch (err) {
     console.warn(err);
     res.status(500).json({ code: 500, message: err.message });
