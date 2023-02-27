@@ -11,6 +11,7 @@ app.use(cors());
 app.use('/', require('./routes'));
 
 app.use((req, res) => {
+  console.debug(`${req.url} requested`);
   res.status(404).json({ message: 'Not Found', code: 404 });
 });
 
