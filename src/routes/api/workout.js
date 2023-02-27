@@ -212,6 +212,21 @@ router.put('/exercise-goals/:id', async (req, res) => {
   }
 });
 
+router.delete('/:workoutId/exercise-goal/:exerciseGoalId', async (req, res) => {
+  console.info('DELETE /api/workout/:id/exercise-goal/:id requested');
+
+  try {
+    await deleteDoc(doc(db, 'exerciseGoals', req.params.exerciseGoalId));
+
+    res
+      .status(200)
+      .json({ code: 200, message: `Exercise goal ${req.params.exerciseGoalId} deleted` });
+  } catch (err) {
+    console.warn(err);
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
 const exerciseGoalConverter = {
   toFirestore: (exerciseGoal) => {
     return {
