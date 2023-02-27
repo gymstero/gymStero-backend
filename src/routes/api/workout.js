@@ -10,9 +10,11 @@ const {
   addDoc,
   setDoc,
   documentId,
+  deleteDoc,
 } = require('firebase/firestore');
 const { db } = require('../../firebase/config');
 const { ExerciseGoal } = require('../../model/ExerciseGoal');
+const { Workout } = require('../../model/Workout');
 
 router.get('/exercises', async (req, res) => {
   console.info('GET /api/workout/exercise requested');
@@ -111,7 +113,7 @@ router.post('/:id/exercise-goal', async (req, res) => {
     const snapshot = await getDoc(doc(db, 'workouts', req.params.id));
     let workout = snapshot.data();
     workout.exerciseGoals.push(result.id);
-
+    console.log('WORKOUT', workout.exerciseGoals);
     await setDoc(doc(db, 'workouts', req.params.id), {
       ...workout,
     });
@@ -151,36 +153,59 @@ router.get('/:id/exercise-goals', async (req, res) => {
     const workoutSnapshot = await getDoc(doc(db, 'workouts', req.params.id));
     const workout = workoutSnapshot.data();
 
-    const exerciseGoalQuery = query(
-      collection(db, 'exerciseGoals'),
-      where(documentId(), 'in', workout.exerciseGoals)
-    );
-    const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);
+    if (workout.exerciseGoals) {
+      const exerciseGoalQuery = query(
+        collection(db, 'exerciseGoals'),
+        where(documentId(), 'in', workout.exerciseGoals)
+      );
+      const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);
 
-    exerciseGoalSnapshot.forEach((each) => {
-      let exerciseGoal = each.data();
-      exerciseGoal.id = each.id;
-      exerciseIds.push(exerciseGoal.exerciseId);
-      exerciseGoals.push(exerciseGoal);
-    });
+      exerciseGoalSnapshot.forEach((each) => {
+        let exerciseGoal = each.data();
+        exerciseGoal.id = each.id;
+        exerciseIds.push(exerciseGoal.exerciseId);
+        exerciseGoals.push(exerciseGoal);
+      });
 
-    const exerciseQuery = query(
-      collection(db, 'exercises'),
-      where(documentId(), 'in', exerciseIds)
-    );
-    const exerciseSnapshot = await getDocs(exerciseQuery);
-    exerciseSnapshot.forEach((each) => {
-      let exercise = each.data();
-      exercise.id = each.id;
-      exercises.push(exercise);
-    });
+      const exerciseQuery = query(
+        collection(db, 'exercises'),
+        where(documentId(), 'in', exerciseIds)
+      );
+      const exerciseSnapshot = await getDocs(exerciseQuery);
+      exerciseSnapshot.forEach((each) => {
+        let exercise = each.data();
+        exercise.id = each.id;
+        exercises.push(exercise);
+      });
 
-    exerciseGoals.map(
-      (exerciseGoal) =>
-        (exerciseGoal.exerciseInfo = exercises.find((e) => e.id === exerciseGoal.exerciseId))
-    );
-    console.log(exerciseGoals);
+      exerciseGoals.map(
+        (exerciseGoal) =>
+          (exerciseGoal.exerciseInfo = exercises.find((e) => e.id === exerciseGoal.exerciseId))
+      );
+    }
+
     res.status(200).json({ code: 200, message: 'Exercise goals sent successfully', exerciseGoals });
+  } catch (err) {
+    console.warn(err);
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
+router.put('/exercise-goals/:id', async (req, res) => {
+  console.info('PUT /api/workout/exercise-goals/:id requested');
+  const { targetSets, targetReps, targetWeight, estimatedTime, comment } = req.body;
+
+  try {
+    const exerciseGoalSnapshot = await setDoc(doc(db, 'exerciseGoals', req.params.id), {
+      targetSets,
+      targetReps,
+      targetWeight,
+      estimatedTime,
+      comment,
+    });
+    const exerciseGoal = exerciseGoalSnapshot.data();
+
+    res.status(200).json({ code: 200, message: `Exercise goal ${req.params.id} updated` });
   } catch (err) {
     console.warn(err);
     res.status(500).json({ code: 500, message: err.message });
