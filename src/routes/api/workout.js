@@ -236,6 +236,25 @@ router.delete('/:workoutId/exercise-goal/:exerciseGoalId', async (req, res) => {
   }
 });
 
+router.put('/:id/', async (req, res) => {
+  console.info('PUT /api/workout/:id requested');
+
+  try {
+    const workoutSnapshot = await getDoc(doc(db, 'workouts', req.params.id));
+    let workout = workoutSnapshot.data();
+    workout.exerciseGoals = req.body;
+
+    await setDoc(doc(db, 'workouts', req.params.id), {
+      ...workout,
+    });
+
+    res.status(200).json({ code: 200, message: `Workout plan ${req.params.id} updated` });
+  } catch (err) {
+    console.warn(err);
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
 const exerciseGoalConverter = {
   toFirestore: (exerciseGoal) => {
     return {
