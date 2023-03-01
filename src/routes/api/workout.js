@@ -113,7 +113,7 @@ router.post('/:id/exercise-goal', async (req, res) => {
     const snapshot = await getDoc(doc(db, 'workouts', req.params.id));
     let workout = snapshot.data();
     workout.exerciseGoals.push(result.id);
-    console.log('WORKOUT', workout.exerciseGoals);
+
     await setDoc(doc(db, 'workouts', req.params.id), {
       ...workout,
     });
@@ -216,11 +216,39 @@ router.delete('/:workoutId/exercise-goal/:exerciseGoalId', async (req, res) => {
   console.info('DELETE /api/workout/:id/exercise-goal/:id requested');
 
   try {
+    const workoutSnapshot = await getDoc(doc(db, 'workouts', req.params.workoutId));
+    let workout = workoutSnapshot.data();
+    let exerciseGoals = workout.exerciseGoals.filter(
+      (exerciseGoal) => exerciseGoal !== req.params.exerciseGoalId
+    );
+    workout.exerciseGoals = exerciseGoals;
+
+    await setDoc(doc(db, 'workouts', req.params.workoutId), { ...workout });
+
     await deleteDoc(doc(db, 'exerciseGoals', req.params.exerciseGoalId));
 
     res
       .status(200)
       .json({ code: 200, message: `Exercise goal ${req.params.exerciseGoalId} deleted` });
+  } catch (err) {
+    console.warn(err);
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
+router.put('/:id/', async (req, res) => {
+  console.info('PUT /api/workout/:id requested');
+
+  try {
+    const workoutSnapshot = await getDoc(doc(db, 'workouts', req.params.id));
+    let workout = workoutSnapshot.data();
+    workout.exerciseGoals = req.body;
+
+    await setDoc(doc(db, 'workouts', req.params.id), {
+      ...workout,
+    });
+
+    res.status(200).json({ code: 200, message: `Workout plan ${req.params.id} updated` });
   } catch (err) {
     console.warn(err);
     res.status(500).json({ code: 500, message: err.message });
