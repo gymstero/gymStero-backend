@@ -282,7 +282,8 @@ router.put('/:id/schedule', async (req, res) => {
     let totalWorkoutTime = 0;
     const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);
     exerciseGoalSnapshot.forEach((doc) => {
-      totalWorkoutTime += doc.data().estimatedTime;
+      const time = doc.data().estimatedTime;
+      totalWorkoutTime += parseInt(time, 10);
     });
 
     await updateDoc(doc(db, 'workouts', req.params.id), {
@@ -297,6 +298,7 @@ router.put('/:id/schedule', async (req, res) => {
     res.status(200).json({
       code: 200,
       message: 'Workout schedule has been updated successfully',
+      title: workout.title,
       schedule,
       totalWorkoutTime,
     });
