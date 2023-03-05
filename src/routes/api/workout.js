@@ -9,6 +9,7 @@ const {
   getDoc,
   addDoc,
   setDoc,
+  updateDoc,
   documentId,
   deleteDoc,
 } = require('firebase/firestore');
@@ -258,13 +259,15 @@ router.put('/:id/', async (req, res) => {
 router.put('/:id/schedule', async (req, res) => {
   console.info('PUT /api/workout/:id/schedule requested');
   const workoutData = req.body;
-
+  console.log(req.body);
   try {
     const schedule = getSchedule(workoutData);
-    (workoutData.schedule = schedule), (workoutData.totalWorkoutTime = '1h');
+    workoutData.schedule = schedule;
+    workoutData.totalWorkoutTime = 30;
 
-    await setDoc(doc(db, 'workouts', req.params.id), {
-      ...workoutData,
+    await updateDoc(doc(db, 'workouts', req.params.id), {
+      schedule,
+      totalWorkoutTime: 35,
     });
 
     res
