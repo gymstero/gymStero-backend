@@ -4,7 +4,7 @@ class Workout {
     this.exerciseGoals = exerciseGoals;
     this.startDate;
     this.endDate;
-    this.daysWhenWeekly = [];
+    this.daysInWeek = [];
     this.reminder;
     this.createdAt = new Date().toISOString();
     this.schedule = [];

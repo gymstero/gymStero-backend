@@ -1,16 +1,16 @@
 const { Day } = require('../model/Workout');
 
-const getSchedule = (workoutData) => {
+const getSchedule = (startDate, endDate, daysInWeek) => {
   let datesArray = [];
   let days = [];
 
-  for (const day of workoutData.daysWhenWeekly) {
+  for (const day of daysInWeek) {
     days.push(dayToInt(day));
   }
 
   for (
-    let date = new Date(workoutData.startDate);
-    date <= new Date(workoutData.endDate);
+    let date = new Date(startDate);
+    date <= new Date(endDate);
     date.setDate(date.getDate() + 1)
   ) {
     if (days.includes(date.getDay())) {

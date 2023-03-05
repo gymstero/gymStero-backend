@@ -258,21 +258,40 @@ router.put('/:id/', async (req, res) => {
 
 router.put('/:id/schedule', async (req, res) => {
   console.info('PUT /api/workout/:id/schedule requested');
-  const workoutData = req.body;
+  const { startDate, endDate, daysInWeek, reminder } = req.body;
 
   try {
-    const schedule = getSchedule(workoutData);
-    workoutData.schedule = schedule;
-    workoutData.totalWorkoutTime = 30;
+    const schedule = getSchedule(startDate, endDate, daysInWeek);
+
+    const snapshot = await getDoc(doc(db, 'workouts', req.params.id));
+    const workout = snapshot.data();
+
+    const exerciseGoalQuery = query(
+      collection(db, 'exerciseGoals'),
+      where(documentId(), 'in', workout.exerciseGoals)
+    );
+
+    let totalWorkoutTime = 0;
+    const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);
+    exerciseGoalSnapshot.forEach((doc) => {
+      totalWorkoutTime += doc.data().estimatedTime;
+    });
 
     await updateDoc(doc(db, 'workouts', req.params.id), {
       schedule,
-      totalWorkoutTime: 35,
+      totalWorkoutTime,
+      startDate,
+      endDate,
+      daysInWeek,
+      reminder,
     });
 
-    res
-      .status(200)
-      .json({ code: 200, message: 'Workout schedule has been updated successfully', workoutData });
+    res.status(200).json({
+      code: 200,
+      message: 'Workout schedule has been updated successfully',
+      schedule,
+      totalWorkoutTime,
+    });
   } catch (err) {
     console.warn(err);
     res.status(500).json({ code: 500, message: err.message });
