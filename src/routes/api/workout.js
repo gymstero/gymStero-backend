@@ -259,7 +259,7 @@ router.put('/:id/', async (req, res) => {
 router.put('/:id/schedule', async (req, res) => {
   console.info('PUT /api/workout/:id/schedule requested');
   const workoutData = req.body;
-  console.log(req.body);
+
   try {
     const schedule = getSchedule(workoutData);
     workoutData.schedule = schedule;
