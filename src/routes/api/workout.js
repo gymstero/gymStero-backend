@@ -185,6 +185,13 @@ router.get('/:id/exercise-goals', async (req, res) => {
       );
     }
 
+    let tempExerciseGoals = [];
+    workout.exerciseGoals.forEach((id) => {
+      const match = exerciseGoals.find((goal) => goal.id === id);
+      tempExerciseGoals.unshift(match);
+    });
+    exerciseGoals = tempExerciseGoals;
+
     res.status(200).json({ code: 200, message: 'Exercise goals sent successfully', exerciseGoals });
   } catch (err) {
     console.warn(err);
@@ -239,10 +246,11 @@ router.delete('/:workoutId/exercise-goal/:exerciseGoalId', async (req, res) => {
 
 router.put('/:id/', async (req, res) => {
   console.info('PUT /api/workout/:id requested');
-
+  console.log(req.params.id);
   try {
     const workoutSnapshot = await getDoc(doc(db, 'workouts', req.params.id));
     let workout = workoutSnapshot.data();
+
     workout.exerciseGoals = req.body;
 
     await setDoc(doc(db, 'workouts', req.params.id), {
@@ -323,3 +331,4 @@ const exerciseGoalConverter = {
 };
 
 module.exports = router;
+
