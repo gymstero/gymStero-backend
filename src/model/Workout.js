@@ -2,27 +2,20 @@ class Workout {
   constructor(title, exerciseGoals) {
     this.title = title;
     this.exerciseGoals = exerciseGoals;
-    this.startDate = 'today';
-    this.endDate = 'tomorrow';
-    this.routine = 'once';
-    this.daysWhenWeekly = [];
-    this.reminder = '10 mins before';
+    this.startDate;
+    this.endDate;
+    this.daysInWeek = [];
+    this.reminder;
     this.createdAt = new Date().toISOString();
+    this.schedule = [];
+    this.totalWorkoutTime = 0;
   }
 }
-
-const Routine = {
-  Daily: 'Every Day',
-  Weekly: 'Every Week',
-  Weekdays: 'Weekdays Only',
-  Weekend: 'Weekend Only',
-};
 
 const Reminder = {
   Morning: '9am on the day',
   Noon: '12pm on the day',
   Evening: '6pm of the day',
-  //Custom: '',
 };
 
 const Day = {
@@ -35,4 +28,4 @@ const Day = {
   Sunday: 'Sunday',
 };
 
-module.exports = { Workout, Routine, Reminder, Day };
+module.exports = { Workout, Reminder, Day };

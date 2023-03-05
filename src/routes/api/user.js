@@ -198,10 +198,11 @@ const workoutConverter = {
       exerciseGoals: workout.exerciseGoals,
       startDate: workout.startDate,
       endDate: workout.endDate,
-      routine: workout.routine,
-      daysWhenWeekly: workout.daysWhenWeekly,
+      daysInWeek: workout.daysInWeek,
       reminder: workout.reminder,
       createdAt: workout.createdAt,
+      schedule: workout.schedule,
+      totalWorkoutTime: workout.totalWorkoutTime,
     };
   },
   fromFirestore: (snapshot, options) => {
@@ -211,10 +212,11 @@ const workoutConverter = {
       data.exerciseGoals,
       data.startDate,
       data.endDate,
-      data.routine,
-      data.daysWhenWeekly,
+      data.daysInWeek,
       data.reminder,
-      data.createdAt
+      data.createdAt,
+      data.schedule,
+      data.totalWorkoutTime
     );
   },
 };

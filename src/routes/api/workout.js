@@ -9,12 +9,13 @@ const {
   getDoc,
   addDoc,
   setDoc,
+  updateDoc,
   documentId,
   deleteDoc,
 } = require('firebase/firestore');
 const { db } = require('../../firebase/config');
 const { ExerciseGoal } = require('../../model/ExerciseGoal');
-const { Workout } = require('../../model/Workout');
+const { getSchedule } = require('../../helper/helper');
 
 router.get('/exercises', async (req, res) => {
   console.info('GET /api/workout/exercise requested');
@@ -109,7 +110,6 @@ router.post('/:id/exercise-goal', async (req, res) => {
       ref,
       new ExerciseGoal(exerciseId, targetSets, targetReps, targetWeight, estimatedTime, comment)
     );
-
     const snapshot = await getDoc(doc(db, 'workouts', req.params.id));
     let workout = snapshot.data();
     workout.exerciseGoals.push(result.id);
@@ -117,8 +117,9 @@ router.post('/:id/exercise-goal', async (req, res) => {
     await setDoc(doc(db, 'workouts', req.params.id), {
       ...workout,
     });
+    console.log(workout);
 
-    res.status(201).json({ code: 201, message: 'Exercise goal is created', id: result.id });
+    res.status(201).json({ code: 201, message: 'Exercise goal is created', workout });
   } catch (err) {
     console.warn(err);
     res.status(500).json({ code: 500, message: err.message });
@@ -184,6 +185,13 @@ router.get('/:id/exercise-goals', async (req, res) => {
       );
     }
 
+    let tempExerciseGoals = [];
+    workout.exerciseGoals.forEach((id) => {
+      const match = exerciseGoals.find((goal) => goal.id === id);
+      tempExerciseGoals.unshift(match);
+    });
+    exerciseGoals = tempExerciseGoals;
+
     res.status(200).json({ code: 200, message: 'Exercise goals sent successfully', exerciseGoals });
   } catch (err) {
     console.warn(err);
@@ -238,10 +246,11 @@ router.delete('/:workoutId/exercise-goal/:exerciseGoalId', async (req, res) => {
 
 router.put('/:id/', async (req, res) => {
   console.info('PUT /api/workout/:id requested');
-
+  console.log(req.params.id);
   try {
     const workoutSnapshot = await getDoc(doc(db, 'workouts', req.params.id));
     let workout = workoutSnapshot.data();
+
     workout.exerciseGoals = req.body;
 
     await setDoc(doc(db, 'workouts', req.params.id), {
@@ -249,6 +258,48 @@ router.put('/:id/', async (req, res) => {
     });
 
     res.status(200).json({ code: 200, message: `Workout plan ${req.params.id} updated` });
+  } catch (err) {
+    console.warn(err);
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
+router.put('/:id/schedule', async (req, res) => {
+  console.info('PUT /api/workout/:id/schedule requested');
+  const { startDate, endDate, daysInWeek, reminder } = req.body;
+
+  try {
+    const schedule = getSchedule(startDate, endDate, daysInWeek);
+
+    const snapshot = await getDoc(doc(db, 'workouts', req.params.id));
+    const workout = snapshot.data();
+
+    const exerciseGoalQuery = query(
+      collection(db, 'exerciseGoals'),
+      where(documentId(), 'in', workout.exerciseGoals)
+    );
+
+    let totalWorkoutTime = 0;
+    const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);
+    exerciseGoalSnapshot.forEach((doc) => {
+      totalWorkoutTime += doc.data().estimatedTime;
+    });
+
+    await updateDoc(doc(db, 'workouts', req.params.id), {
+      schedule,
+      totalWorkoutTime,
+      startDate,
+      endDate,
+      daysInWeek,
+      reminder,
+    });
+
+    res.status(200).json({
+      code: 200,
+      message: 'Workout schedule has been updated successfully',
+      schedule,
+      totalWorkoutTime,
+    });
   } catch (err) {
     console.warn(err);
     res.status(500).json({ code: 500, message: err.message });
@@ -280,3 +331,4 @@ const exerciseGoalConverter = {
 };
 
 module.exports = router;
+
