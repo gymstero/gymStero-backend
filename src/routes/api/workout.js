@@ -248,7 +248,7 @@ router.delete('/:workoutId/exercise-goal/:exerciseGoalId', async (req, res) => {
 
 router.put('/:id/', async (req, res) => {
   console.info('PUT /api/workout/:id requested');
-  console.log(req.params.id);
+
   try {
     const workoutSnapshot = await getDoc(doc(db, 'workouts', req.params.id));
     let workout = workoutSnapshot.data();
@@ -281,12 +281,15 @@ router.put('/:id/schedule', async (req, res) => {
       where(documentId(), 'in', workout.exerciseGoals)
     );
 
-    let totalWorkoutTime = 0;
     const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);
-    exerciseGoalSnapshot.forEach((doc) => {
-      const time = doc.data().estimatedTime;
-      totalWorkoutTime += parseInt(time, 10);
-    });
+
+    let totalWorkoutTime = 0;
+    if (exerciseGoalSnapshot.size > 0) {
+      exerciseGoalSnapshot.forEach((doc) => {
+        const time = doc.data().estimatedTime;
+        totalWorkoutTime += parseInt(time, 10);
+      });
+    }
 
     await updateDoc(doc(db, 'workouts', req.params.id), {
       schedule,
