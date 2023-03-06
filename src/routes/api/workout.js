@@ -154,7 +154,7 @@ router.get('/:id/exercise-goals', async (req, res) => {
     const workoutSnapshot = await getDoc(doc(db, 'workouts', req.params.id));
     const workout = workoutSnapshot.data();
 
-    if (workout.exerciseGoals) {
+    if (workout.exerciseGoals.length > 0) {
       const exerciseGoalQuery = query(
         collection(db, 'exerciseGoals'),
         where(documentId(), 'in', workout.exerciseGoals)
@@ -168,16 +168,18 @@ router.get('/:id/exercise-goals', async (req, res) => {
         exerciseGoals.push(exerciseGoal);
       });
 
-      const exerciseQuery = query(
-        collection(db, 'exercises'),
-        where(documentId(), 'in', exerciseIds)
-      );
-      const exerciseSnapshot = await getDocs(exerciseQuery);
-      exerciseSnapshot.forEach((each) => {
-        let exercise = each.data();
-        exercise.id = each.id;
-        exercises.push(exercise);
-      });
+      if (exerciseIds.length > 0) {
+        const exerciseQuery = query(
+          collection(db, 'exercises'),
+          where(documentId(), 'in', exerciseIds)
+        );
+        const exerciseSnapshot = await getDocs(exerciseQuery);
+        exerciseSnapshot.forEach((each) => {
+          let exercise = each.data();
+          exercise.id = each.id;
+          exercises.push(exercise);
+        });
+      }
 
       exerciseGoals.map(
         (exerciseGoal) =>

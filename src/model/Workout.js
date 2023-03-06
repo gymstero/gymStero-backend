@@ -2,10 +2,10 @@ class Workout {
   constructor(title, exerciseGoals) {
     this.title = title;
     this.exerciseGoals = exerciseGoals;
-    this.startDate;
-    this.endDate;
+    this.startDate = '';
+    this.endDate = '';
     this.daysInWeek = [];
-    this.reminder;
+    this.reminder = '';
     this.createdAt = new Date().toISOString();
     this.schedule = [];
     this.totalWorkoutTime = 0;
