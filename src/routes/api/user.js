@@ -105,6 +105,7 @@ router.get('/:id/workouts', async (req, res) => {
 });
 
 router.post('/:id/workout', async (req, res) => {
+  console.info('POST /api/user/:id/workout requested');
   const { title, exerciseGoals } = req.body;
   let user;
 
