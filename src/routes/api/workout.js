@@ -20,28 +20,33 @@ const { getSchedule } = require('../../helper/helper');
 router.get('/exercises', async (req, res) => {
   console.info('GET /api/workout/exercise requested');
   let exercises = [];
-  let muscleGroup, exerciseType;
+  let exercisesByType = [];
 
-  if (req.query.muscleGroup) {
-    muscleGroup = where('muscleGroup', '==', req.query.muscleGroup);
-  } else {
-    muscleGroup = where('muscleGroup', 'not-in', '');
-  }
-
+  let exerciseQuery;
   if (req.query.exerciseType) {
-    exerciseType = where('exerciseType', '==', req.query.exerciseType);
+    exerciseQuery = query(
+      collection(db, 'exercises'),
+      where('exerciseType', '==', req.query.exerciseType)
+    );
   } else {
-    exerciseType = where('exerciseType', 'not-in', '');
+    exerciseQuery = query(collection(db, 'exercises'));
   }
 
   try {
-    const exerciseQuery = query(collection(db, 'exercises'), muscleGroup, exerciseType);
     const querySnapshot = await getDocs(exerciseQuery);
     querySnapshot.forEach((doc) => {
       let exercise = doc.data();
       exercise.id = doc.id;
-      exercises.push(exercise);
+      exercisesByType.push(exercise);
     });
+
+    if (req.query.muscleGroup) {
+      exercises = exercisesByType.filter(
+        (exercise) => exercise.muscleGroup === req.query.muscleGroup
+      );
+    } else {
+      exercises = exercisesByType;
+    }
 
     res.status(200).json({ code: 200, message: 'Exercise data sent successfully', exercises });
   } catch (err) {
@@ -117,7 +122,6 @@ router.post('/:id/exercise-goal', async (req, res) => {
     await setDoc(doc(db, 'workouts', req.params.id), {
       ...workout,
     });
-    console.log(workout);
 
     res.status(201).json({ code: 201, message: 'Exercise goal is created', workout });
   } catch (err) {
