@@ -74,9 +74,8 @@ router.get('/:id/workouts', async (req, res) => {
   let workouts = [];
 
   try {
-    const userQuery = query(collection(db, 'users'), where('id', '==', req.params.id), limit(1));
-    const userQuerySnapshot = await getDocs(userQuery);
-    userQuerySnapshot.forEach((doc) => (user = doc.data()));
+    const snapshot = await getDoc(doc(db, 'users', req.params.id));
+    const user = snapshot.data();
 
     if (user.workouts.length > 10) {
       const startIndex = user.workouts.length - 10;
@@ -223,3 +222,4 @@ const workoutConverter = {
 };
 
 module.exports = router;
+
