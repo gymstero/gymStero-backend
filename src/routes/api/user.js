@@ -191,6 +191,41 @@ router.delete('/:userId/workout/:workoutId', async (req, res) => {
   }
 });
 
+router.get('/:userId/workout-schedule', async (req, res) => {
+  console.info('GET /user/id/workout-schedule requested');
+  try {
+    const userSnapshot = await getDoc(doc(db, 'users', req.params.userId));
+    const user = userSnapshot.data();
+
+    const workoutQuery = query(
+      collection(db, 'workouts'),
+      where(documentId(), 'in', user.workouts)
+    );
+    const workoutSnapshot = await getDocs(workoutQuery);
+
+    let workoutSchedule = [];
+    workoutSnapshot.forEach((each) => {
+      let workout = each.data();
+      workout.id = each.id;
+      workoutSchedule.push({
+        id: workout.id,
+        title: workout.title,
+        schedule: workout.schedule,
+        totalWorkoutTime: workout.totalWorkoutTime,
+      });
+    });
+    console.log(workoutSchedule);
+    res
+      .status(200)
+      .json({ code: 200, message: `Workout schedule sent successfully`, workoutSchedule });
+  } catch (err) {
+    console.error(err.message);
+    res
+      .status(500)
+      .json({ code: 500, message: 'Something went wrong while deleting workout in DB' });
+  }
+});
+
 const workoutConverter = {
   toFirestore: (workout) => {
     return {
@@ -222,4 +257,3 @@ const workoutConverter = {
 };
 
 module.exports = router;
-
