@@ -291,7 +291,7 @@ router.put('/:id/schedule', async (req, res) => {
     if (exerciseGoalSnapshot.size > 0) {
       exerciseGoalSnapshot.forEach((doc) => {
         const time = doc.data().estimatedTime;
-        totalWorkoutTime += parseInt(time, 10);
+        totalWorkoutTime += parseInt(time ? time : 0, 10);
       });
     }
 
@@ -310,6 +310,24 @@ router.put('/:id/schedule', async (req, res) => {
       title: workout.title,
       schedule,
       totalWorkoutTime,
+    });
+  } catch (err) {
+    console.warn(err);
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
+router.put('/:workoutId/schedule-delete', async (req, res) => {
+  console.info('PUT /api/workout/:id/schedule-delete requested');
+
+  try {
+    await updateDoc(doc(db, 'workouts', req.params.workoutId), {
+      schedule: [],
+    });
+
+    res.status(200).json({
+      code: 200,
+      message: `Workout schedule for ${req.params.workoutId} deleted successfully`,
     });
   } catch (err) {
     console.warn(err);
