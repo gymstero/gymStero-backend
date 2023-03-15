@@ -12,6 +12,8 @@ const {
   updateDoc,
   documentId,
   deleteDoc,
+  limit,
+  orderBy,
 } = require('firebase/firestore');
 const { db } = require('../../firebase/config');
 const { ExerciseGoal } = require('../../model/ExerciseGoal');
@@ -335,6 +337,69 @@ router.put('/:workoutId/schedule-delete', async (req, res) => {
   }
 });
 
+router.get('/', async (req, res) => {
+  console.info('GET /api/workout requested');
+
+  const userQuery = query(collection(db, 'users'), where('publicUser', '==', true), limit(10));
+  try {
+    const userSnapshot = await getDocs(userQuery);
+
+    let publicUsers = [];
+    let publicWorkouts = [];
+    userSnapshot.forEach((doc) => {
+      const user = doc.data();
+      if (user.publicUser) {
+        publicUsers.push(user);
+      }
+    });
+    publicUsers.sort((a, b) => b.numOfFollowers - a.numOfFollowers);
+
+    publicUsers.forEach((user) => {
+      let firstThreeWorkouts = [];
+      if (user.workouts.length > 3) {
+        firstThreeWorkouts = user.workouts.slice(0, 3);
+      } else {
+        firstThreeWorkouts = user.workouts;
+      }
+      publicWorkouts.push(...firstThreeWorkouts);
+    });
+
+    const firstTenWorkouts = publicWorkouts.slice(0, 10);
+    let workoutQuery = query(
+      collection(db, 'workouts'),
+      where(documentId(), 'in', firstTenWorkouts)
+    );
+    
+    let workouts = [];
+    const workoutSnapshot = await getDocs(workoutQuery);
+    workoutSnapshot.forEach((doc) => {
+      const { title, createdAt, exerciseGoals, totalWorkoutTime } = doc.data();
+      let workout = { title, createdAt, exerciseGoals, totalWorkoutTime };
+
+      if (!req.query.workoutTitle) {
+        req.query.workoutTitle = '';
+      }
+
+      if (workout.title.includes(req.query.workoutTitle)) {
+        workout.id = doc.id;
+        publicUsers.forEach((user) => {
+          if (user.workouts.includes(workout.id)) {
+            workout.username = user.username;
+          }
+        });
+        workouts.push(workout);
+      }
+    });
+
+    res.status(200).json({ code: 200, message: `Popular workouts sent`, workouts });
+  } catch (err) {
+    console.error(err.message);
+    res
+      .status(500)
+      .json({ code: 500, message: 'Something went wrong while getting workouts in DB' });
+  }
+});
+
 const exerciseGoalConverter = {
   toFirestore: (exerciseGoal) => {
     return {
@@ -360,4 +425,3 @@ const exerciseGoalConverter = {
 };
 
 module.exports = router;
-

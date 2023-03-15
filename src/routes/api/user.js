@@ -12,6 +12,7 @@ const {
   documentId,
   getDoc,
   deleteDoc,
+  orderBy,
 } = require('firebase/firestore');
 const { db } = require('../../firebase/config');
 const { Workout } = require('../../model/Workout');
@@ -69,7 +70,6 @@ router.get('/:id/profile', async (req, res) => {
 
 router.get('/:id/workouts', async (req, res) => {
   console.log('GET /user/id/workouts requested');
-  let user;
   let workoutIds = [];
   let workouts = [];
 
@@ -214,7 +214,7 @@ router.get('/:userId/workout-schedule', async (req, res) => {
         totalWorkoutTime: workout.totalWorkoutTime,
       });
     });
-    console.log(workoutSchedule);
+
     res
       .status(200)
       .json({ code: 200, message: `Workout schedule sent successfully`, workoutSchedule });
@@ -223,6 +223,40 @@ router.get('/:userId/workout-schedule', async (req, res) => {
     res
       .status(500)
       .json({ code: 500, message: 'Something went wrong while deleting workout in DB' });
+  }
+});
+
+router.get('/', async (req, res) => {
+  console.info('GET /api/user requested');
+
+  let userQuery;
+  if (req.query.username) {
+    userQuery = query(collection(db, 'users'), where('username', '==', req.query.username));
+  } else {
+    userQuery = query(collection(db, 'users'), orderBy('numOfFollowers'), limit(10));
+  }
+
+  let users = [];
+  try {
+    const userSnapshot = await getDocs(userQuery);
+    userSnapshot.forEach((doc) => {
+      let user = doc.data();
+      if (user.publicUser) {
+        users.push({
+          id: doc.id,
+          username: user.username,
+          photoUrl: user.photoUrl,
+          numOfFollower: user.numOfFollower,
+          description: user.description,
+          workouts: user.workout,
+        });
+      }
+    });
+
+    res.status(200).json({ code: 200, message: `Top 10 popular users sent`, users });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ code: 500, message: 'Something went wrong while getting users in DB' });
   }
 });
 
