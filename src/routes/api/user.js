@@ -84,27 +84,31 @@ router.get('/:id/workouts', async (req, res) => {
       workoutIds = user.workouts;
     }
 
-    const workoutQuery = query(collection(db, 'workouts'), where(documentId(), 'in', workoutIds));
-    const workoutQuerySnapshot = await getDocs(workoutQuery);
+    if (workoutIds.length > 0) {
+      const workoutQuery = query(collection(db, 'workouts'), where(documentId(), 'in', workoutIds));
+      const workoutQuerySnapshot = await getDocs(workoutQuery);
 
-    workoutQuerySnapshot.forEach((doc) => {
-      let workout = doc.data();
-      workout.id = doc.id;
-      workouts.push(workout);
-    });
-
-    for (const workout of workouts) {
-      const exerciseGoalQuery = query(
-        collection(db, 'exerciseGoals'),
-        where(documentId(), 'in', workout.exerciseGoals)
-      );
-      const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);
-
-      let exerciseIds = [];
-      exerciseGoalSnapshot.forEach((doc) => {
-        exerciseIds.push(doc.data().exerciseId);
+      workoutQuerySnapshot.forEach((doc) => {
+        let workout = doc.data();
+        workout.id = doc.id;
+        workouts.push(workout);
       });
-      workout.exercises = exerciseIds;
+
+      for (const workout of workouts) {
+        if (workout.exerciseGoals.length > 0) {
+          const exerciseGoalQuery = query(
+            collection(db, 'exerciseGoals'),
+            where(documentId(), 'in', workout.exerciseGoals)
+          );
+          const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);
+
+          let exerciseIds = [];
+          exerciseGoalSnapshot.forEach((doc) => {
+            exerciseIds.push(doc.data().exerciseId);
+          });
+          workout.exercises = exerciseIds;
+        }
+      }
     }
 
     res.status(200).json({
