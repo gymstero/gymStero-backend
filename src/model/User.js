@@ -9,6 +9,8 @@ class User {
     this.publicUser = false;
     this.numOfFollowers = 0;
     this.workouts = [];
+    this.followers = [];
+    this.following = [];
   }
 }
 

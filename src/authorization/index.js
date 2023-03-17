@@ -117,6 +117,8 @@ const userConverter = {
       publicUser: user.publicUser,
       numOfFollowers: user.numOfFollowers,
       workouts: user.workouts,
+      followers: user.followers,
+      following: user.following,
     };
   },
   fromFirestore: (snapshot, options) => {
@@ -130,7 +132,9 @@ const userConverter = {
       data.description,
       data.publicUser,
       data.numOfFollowers,
-      data.workouts
+      data.workouts,
+      data.followers,
+      data.following
     );
   },
 };
