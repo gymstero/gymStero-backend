@@ -264,17 +264,12 @@ router.get('/', async (req, res) => {
     userSnapshot.forEach((doc) => {
       let user = doc.data();
       if (user.publicUser) {
-        users.push({
-          id: doc.id,
-          username: user.username,
-          photoUrl: user.photoUrl,
-          numOfFollower: user.numOfFollower,
-          description: user.description,
-          workouts: user.workout,
-        });
+        user.password = undefined;
+        user.email = undefined;
+        users.push(user);
       }
     });
-
+    console.log(users);
     res.status(200).json({ code: 200, message: `Top 10 popular users sent`, users });
   } catch (err) {
     console.error(err.message);
