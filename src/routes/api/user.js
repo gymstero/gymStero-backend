@@ -16,6 +16,7 @@ const {
   orderBy,
   arrayUnion,
   increment,
+  arrayRemove,
 } = require('firebase/firestore');
 const { db } = require('../../firebase/config');
 const { Workout } = require('../../model/Workout');
@@ -281,16 +282,50 @@ router.put('/:userId/following/:id', async (req, res) => {
   console.info('PUT /api/user/:id/following/:id');
 
   try {
-    await updateDoc(doc(db, 'users', req.params.userId), {
-      following: arrayUnion(req.params.id),
-    });
+    const snapshot = await getDoc(doc(db, 'users', req.params.userId));
+    const user = snapshot.data();
 
-    await updateDoc(doc(db, 'users', req.params.id), {
-      followers: arrayUnion(req.params.userId),
-      numOfFollowers: increment(1),
-    });
+    if (!user.following.includes(req.params.id)) {
+      await updateDoc(doc(db, 'users', req.params.userId), {
+        following: arrayUnion(req.params.id),
+      });
 
-    res.status(200).json({ code: 200, message: `Top 10 popular users sent` });
+      await updateDoc(doc(db, 'users', req.params.id), {
+        followers: arrayUnion(req.params.userId),
+        numOfFollowers: increment(1),
+      });
+    }
+
+    res
+      .status(200)
+      .json({ code: 200, message: `User ${req.params.userId} is following ${req.params.id}` });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ code: 500, message: 'Something went wrong while getting users in DB' });
+  }
+});
+
+router.put('/:userId/unfollowing/:id', async (req, res) => {
+  console.info('PUT /api/user/:id/unfollowing/:id requested');
+
+  try {
+    const snapshot = await getDoc(doc(db, 'users', req.params.userId));
+    const user = snapshot.data();
+
+    if (user.followers.includes(req.params.id)) {
+      await updateDoc(doc(db, 'users', req.params.userId), {
+        following: arrayRemove(req.params.id),
+      });
+
+      await updateDoc(doc(db, 'users', req.params.id), {
+        followers: arrayRemove(req.params.userId),
+        numOfFollowers: increment(-1),
+      });
+    }
+
+    res
+      .status(200)
+      .json({ code: 200, message: `User ${req.params.userId} unfollowed ${req.params.id}` });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ code: 500, message: 'Something went wrong while getting users in DB' });
