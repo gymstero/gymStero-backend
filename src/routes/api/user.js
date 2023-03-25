@@ -91,21 +91,24 @@ router.get('/:id/profile', async (req, res) => {
     );
 
     let workoutsWithExerciseIds = [];
-    for (let workout of upcomingWorkouts) {
-      let exercises = [];
-      const exerciseQuery = query(
-        collection(db, 'exerciseGoals'),
-        where(documentId(), 'in', workout.exerciseGoals)
-      );
-      const exerciseGoalSnapshot = await getDocs(exerciseQuery);
-      exerciseGoalSnapshot.forEach((doc) => {
-        let exerciseGoal = doc.data();
-        exercises.push(exerciseGoal.exerciseId);
-      });
-      workout.exercises = exercises;
-      workoutsWithExerciseIds.push(workout);
-    }
-
+    await Promise.all(
+      upcomingWorkouts.map(async (workout) => {
+        let exercises = [];
+        const exerciseQuery = query(
+          collection(db, 'exerciseGoals'),
+          where(documentId(), 'in', workout.exerciseGoals)
+        );
+        const exerciseGoalSnapshot = await getDocs(exerciseQuery);
+        exerciseGoalSnapshot.forEach((doc) => {
+          let exerciseGoal = doc.data();
+          exercises.push(exerciseGoal.exerciseId);
+        });
+        workout.exercises = exercises;
+        workoutsWithExerciseIds.push(workout);
+      })
+    );
+    
+    
     res.status(200).json({
       code: 200,
       message: 'User profile data sent',
