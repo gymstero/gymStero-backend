@@ -19,19 +19,17 @@ const {
   arrayRemove,
 } = require('firebase/firestore');
 const { db } = require('../../firebase/config');
+const { bothSameDate } = require('../../helper/helper');
 const { Workout } = require('../../model/Workout');
 
 router.get('/:id/setting', async (req, res) => {
-  try {
-    const querySnapshot = await getDocs(
-      query(collection(db, 'users'), where('id', '==', req.params.id))
-    );
-    let userData;
-    querySnapshot.forEach((doc) => {
-      userData = doc.data();
-    });
+  console.info('GET /api/user/:id/setting requested');
 
-    res.status(200).json({ code: 200, message: 'User data sent successfully', userData: userData });
+  try {
+    const snapshot = await getDoc(doc(db, 'users', req.params.id));
+    const user = snapshot.data();
+
+    res.status(200).json({ code: 200, message: 'User data sent successfully', userData: user });
   } catch (error) {
     console.error('Could not get user data from Firestore', error);
     res.status(500).json({ code: 500, message: error.message });
@@ -39,6 +37,7 @@ router.get('/:id/setting', async (req, res) => {
 });
 
 router.put('/:id/setting', async (req, res) => {
+  console.info('PUT /api/user/:id/setting requested');
   const userData = req.body;
 
   try {
@@ -53,21 +52,68 @@ router.put('/:id/setting', async (req, res) => {
 });
 
 router.get('/:id/profile', async (req, res) => {
-  console.log('GET /user/id/profile requested');
-  try {
-    const querySnapshot = await getDocs(
-      query(collection(db, 'users'), where('id', '==', req.params.id))
-    );
-    let userData;
-    querySnapshot.forEach((doc) => {
-      userData = doc.data();
-    });
+  console.log('GET /user/:id/profile requested');
 
-    res
-      .status(200)
-      .json({ code: 200, message: 'User profile sent successfully', userData: userData });
+  try {
+    const snapshot = await getDoc(doc(db, 'users', req.params.id));
+    const user = snapshot.data();
+
+    const workoutQuery = query(
+      collection(db, 'workouts'),
+      where(documentId(), 'in', user.workouts)
+    );
+    let workouts = [];
+    const today = new Date();
+    const workoutSnapshot = await getDocs(workoutQuery);
+    workoutSnapshot.forEach((doc) => {
+      let workout = doc.data();
+      let nextClosestDate = new Date(workout.schedule[0]);
+
+      for (const dateString of workout.schedule) {
+        const date = new Date(dateString);
+        if (date >= today && (date < nextClosestDate || nextClosestDate < today)) {
+          nextClosestDate = date;
+        }
+      }
+
+      workout.id = doc.id;
+      workout.schedule = nextClosestDate;
+      workout.startDate = undefined;
+      workout.endDate = undefined;
+      workout.daysInWeek = undefined;
+      workout.reminder = undefined;
+      workouts.push(workout);
+    });
+    const sortedWorkouts = workouts.sort((a, b) => new Date(a.schedule) - new Date(b.schedule));
+
+    const upcomingWorkouts = sortedWorkouts.filter((workout) =>
+      bothSameDate(workout.schedule, workouts[0].schedule)
+    );
+
+    let workoutsWithExerciseIds = [];
+    for (let workout of upcomingWorkouts) {
+      let exercises = [];
+      const exerciseQuery = query(
+        collection(db, 'exerciseGoals'),
+        where(documentId(), 'in', workout.exerciseGoals)
+      );
+      const exerciseGoalSnapshot = await getDocs(exerciseQuery);
+      exerciseGoalSnapshot.forEach((doc) => {
+        let exerciseGoal = doc.data();
+        exercises.push(exerciseGoal.exerciseId);
+      });
+      workout.exercises = exercises;
+      workoutsWithExerciseIds.push(workout);
+    }
+
+    res.status(200).json({
+      code: 200,
+      message: 'User profile data sent',
+      userData: user,
+      workouts: workoutsWithExerciseIds,
+    });
   } catch (error) {
-    console.error('Could not get user profile from Firestore', error);
+    console.error('Could not get user data from Firestore', error);
     res.status(500).json({ code: 500, message: error.message });
   }
 });
