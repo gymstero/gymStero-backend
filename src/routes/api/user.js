@@ -67,25 +67,28 @@ router.get('/:id/profile', async (req, res) => {
     const workoutSnapshot = await getDocs(workoutQuery);
     workoutSnapshot.forEach((doc) => {
       let workout = doc.data();
-      let nextClosestDate = new Date(workout.schedule[0]);
+      if (workout.schedule && workout.schedule.length > 0) {
+        let nextClosestDate = new Date(workout.schedule[0]);
 
-      for (const dateString of workout.schedule) {
-        const date = new Date(dateString);
-        if (date >= today && (date < nextClosestDate || nextClosestDate < today)) {
-          nextClosestDate = date;
+        for (const dateString of workout.schedule) {
+          const date = new Date(dateString);
+          if (date >= today && (date < nextClosestDate || nextClosestDate < today)) {
+            nextClosestDate = date;
+          }
         }
+
+        workout.id = doc.id;
+        workout.schedule = nextClosestDate;
+        workout.startDate = undefined;
+        workout.endDate = undefined;
+        workout.daysInWeek = undefined;
+        workout.reminder = undefined;
+        workouts.push(workout);
       }
-
-      workout.id = doc.id;
-      workout.schedule = nextClosestDate;
-      workout.startDate = undefined;
-      workout.endDate = undefined;
-      workout.daysInWeek = undefined;
-      workout.reminder = undefined;
-      workouts.push(workout);
     });
+    console.log('TEST', workouts);
     const sortedWorkouts = workouts.sort((a, b) => new Date(a.schedule) - new Date(b.schedule));
-
+    console.log('TEST', sortedWorkouts);
     const upcomingWorkouts = sortedWorkouts.filter((workout) =>
       bothSameDate(workout.schedule, workouts[0].schedule)
     );
