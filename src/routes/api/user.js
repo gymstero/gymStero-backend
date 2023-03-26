@@ -52,7 +52,7 @@ router.put('/:id/setting', async (req, res) => {
 });
 
 router.get('/:id/profile', async (req, res) => {
-  console.log('GET /user/:id/profile requested');
+  console.info('GET /user/:id/profile requested');
 
   try {
     const snapshot = await getDoc(doc(db, 'users', req.params.id));
@@ -107,8 +107,7 @@ router.get('/:id/profile', async (req, res) => {
         workoutsWithExerciseIds.push(workout);
       })
     );
-    
-    
+
     res.status(200).json({
       code: 200,
       message: 'User profile data sent',
@@ -122,7 +121,7 @@ router.get('/:id/profile', async (req, res) => {
 });
 
 router.get('/:id/workouts', async (req, res) => {
-  console.log('GET /user/:id/workouts requested');
+  console.info('GET /user/:id/workouts requested');
   let workoutIds = [];
   let workouts = [];
 
@@ -298,8 +297,11 @@ router.get('/:userId/workout-schedule', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
-  console.info('GET /api/user requested');
+router.get('/:id', async (req, res) => {
+  console.info('GET /api/user/:id requested');
+
+  const snapshot = await getDoc(doc(db, 'users', req.params.id));
+  const user = snapshot.data();
 
   let userQuery;
   if (req.query.username) {
@@ -313,14 +315,16 @@ router.get('/', async (req, res) => {
     const userSnapshot = await getDocs(userQuery);
     userSnapshot.forEach((doc) => {
       let user = doc.data();
-      if (user.publicUser) {
+      if (user.publicUser && user.id !== req.params.id) {
         user.password = undefined;
         user.email = undefined;
         users.push(user);
       }
     });
-    console.log(users);
-    res.status(200).json({ code: 200, message: `Top 10 popular users sent`, users });
+
+    res
+      .status(200)
+      .json({ code: 200, message: `Popular users sent`, users, following: user.following });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ code: 500, message: 'Something went wrong while getting users in DB' });
@@ -344,10 +348,13 @@ router.put('/:userId/following/:id', async (req, res) => {
         numOfFollowers: increment(1),
       });
     }
+    user.following.push(req.params.id);
 
-    res
-      .status(200)
-      .json({ code: 200, message: `User ${req.params.userId} is following ${req.params.id}` });
+    res.status(200).json({
+      code: 200,
+      message: `User ${req.params.userId} is following ${req.params.id}`,
+      following: user.following,
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ code: 500, message: 'Something went wrong while getting users in DB' });
@@ -371,10 +378,13 @@ router.put('/:userId/unfollowing/:id', async (req, res) => {
         numOfFollowers: increment(-1),
       });
     }
+    following = user.following.filter((each) => each !== req.params.id);
 
-    res
-      .status(200)
-      .json({ code: 200, message: `User ${req.params.userId} unfollowed ${req.params.id}` });
+    res.status(200).json({
+      code: 200,
+      message: `User ${req.params.userId} unfollowed ${req.params.id}`,
+      following,
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ code: 500, message: 'Something went wrong while getting users in DB' });
