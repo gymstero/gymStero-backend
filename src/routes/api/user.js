@@ -67,25 +67,27 @@ router.get('/:id/profile', async (req, res) => {
     const workoutSnapshot = await getDocs(workoutQuery);
     workoutSnapshot.forEach((doc) => {
       let workout = doc.data();
-      let nextClosestDate = new Date(workout.schedule[0]);
+      if (workout.schedule && workout.schedule.length > 0) {
+        let nextClosestDate = new Date(workout.schedule[0]);
 
-      for (const dateString of workout.schedule) {
-        const date = new Date(dateString);
-        if (date >= today && (date < nextClosestDate || nextClosestDate < today)) {
-          nextClosestDate = date;
+        for (const dateString of workout.schedule) {
+          const date = new Date(dateString);
+          if (date >= today && (date < nextClosestDate || nextClosestDate < today)) {
+            nextClosestDate = date;
+          }
         }
+
+        workout.id = doc.id;
+        workout.schedule = nextClosestDate;
+        workout.startDate = undefined;
+        workout.endDate = undefined;
+        workout.daysInWeek = undefined;
+        workout.reminder = undefined;
+        workouts.push(workout);
       }
-
-      workout.id = doc.id;
-      workout.schedule = nextClosestDate;
-      workout.startDate = undefined;
-      workout.endDate = undefined;
-      workout.daysInWeek = undefined;
-      workout.reminder = undefined;
-      workouts.push(workout);
     });
-    const sortedWorkouts = workouts.sort((a, b) => new Date(a.schedule) - new Date(b.schedule));
 
+    const sortedWorkouts = workouts.sort((a, b) => new Date(a.schedule) - new Date(b.schedule));
     const upcomingWorkouts = sortedWorkouts.filter((workout) =>
       bothSameDate(workout.schedule, workouts[0].schedule)
     );
@@ -391,4 +393,25 @@ router.put('/:userId/unfollowing/:id', async (req, res) => {
   }
 });
 
+router.get('/:id/get-following', async (req, res) => {
+  console.info('GET /api/user/:id/get-following requested');
+
+  try {
+    const snapshot = await getDoc(doc(db, 'users', req.params.id));
+    const user = snapshot.data();
+    console.log(user);
+    res.status(200).json({
+      code: 200,
+      message: `Following users sent`,
+      following: user.following,
+    });
+  } catch (err) {
+    console.error(err.message);
+    res
+      .status(500)
+      .json({ code: 500, message: 'Something went wrong while getting following users in DB' });
+  }
+});
+
 module.exports = router;
+
