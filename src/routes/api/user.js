@@ -86,9 +86,8 @@ router.get('/:id/profile', async (req, res) => {
         workouts.push(workout);
       }
     });
-    console.log('TEST', workouts);
+
     const sortedWorkouts = workouts.sort((a, b) => new Date(a.schedule) - new Date(b.schedule));
-    console.log('TEST', sortedWorkouts);
     const upcomingWorkouts = sortedWorkouts.filter((workout) =>
       bothSameDate(workout.schedule, workouts[0].schedule)
     );
@@ -394,4 +393,25 @@ router.put('/:userId/unfollowing/:id', async (req, res) => {
   }
 });
 
+router.get('/:id/get-following', async (req, res) => {
+  console.info('GET /api/user/:id/get-following requested');
+
+  try {
+    const snapshot = await getDoc(doc(db, 'users', req.params.id));
+    const user = snapshot.data();
+    console.log(user);
+    res.status(200).json({
+      code: 200,
+      message: `Following users sent`,
+      following: user.following,
+    });
+  } catch (err) {
+    console.error(err.message);
+    res
+      .status(500)
+      .json({ code: 500, message: 'Something went wrong while getting following users in DB' });
+  }
+});
+
 module.exports = router;
+
