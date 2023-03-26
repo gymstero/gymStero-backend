@@ -13,10 +13,11 @@ const {
   documentId,
   deleteDoc,
   limit,
-  orderBy,
+  arrayUnion,
 } = require('firebase/firestore');
 const { db } = require('../../firebase/config');
-const { ExerciseGoal } = require('../../model/ExerciseGoal');
+const { Workout, workoutConverter } = require('../../model/Workout');
+const { ExerciseGoal, exerciseGoalConverter } = require('../../model/ExerciseGoal');
 const { getSchedule } = require('../../helper/helper');
 
 router.get('/exercises', async (req, res) => {
@@ -340,8 +341,8 @@ router.put('/:workoutId/schedule-delete', async (req, res) => {
 router.get('/user/:id', async (req, res) => {
   console.info('GET /api/workout/user/:id requested');
 
-  const userQuery = query(collection(db, 'users'), where('publicUser', '==', true), limit(10));
   try {
+    const userQuery = query(collection(db, 'users'), where('publicUser', '==', true), limit(10));
     const userSnapshot = await getDocs(userQuery);
 
     let publicUsers = [];
@@ -371,7 +372,7 @@ router.get('/user/:id', async (req, res) => {
       collection(db, 'workouts'),
       where(documentId(), 'in', firstTenWorkouts)
     );
-
+    
     let workouts = [];
     const workoutSnapshot = await getDocs(workoutQuery);
     workoutSnapshot.forEach((doc) => {
@@ -402,28 +403,49 @@ router.get('/user/:id', async (req, res) => {
   }
 });
 
-const exerciseGoalConverter = {
-  toFirestore: (exerciseGoal) => {
-    return {
-      exerciseId: exerciseGoal.exerciseId,
-      targetSets: exerciseGoal.targetSets,
-      targetReps: exerciseGoal.targetReps,
-      targetWeight: exerciseGoal.targetWeight,
-      estimatedTime: exerciseGoal.estimatedTime,
-      comment: exerciseGoal.comment,
-    };
-  },
-  fromFirestore: (snapshot, options) => {
-    const data = snapshot.data(options);
-    return new ExerciseGoal(
-      data.exerciseId,
-      data.targetSets,
-      data.targetReps,
-      data.targetWeight,
-      data.estimatedTime,
-      data.comment
+router.put('/copy-workout/:workoutId/to-user/:userId/', async (req, res) => {
+  console.info('PUT /api/workout/copy-workout/:id/to-user/:id requested');
+
+  try {
+    const snapshot = await getDoc(doc(db, 'workouts', req.params.workoutId));
+    const workout = snapshot.data();
+
+    let copiedExerciseGoals = [];
+    await Promise.all(
+      workout.exerciseGoals.map(async (exercise) => {
+        const snapshot = await getDoc(doc(db, 'exerciseGoals', exercise));
+        const exerciseGoal = snapshot.data();
+        const { exerciseId, targetSets, targetReps, targetWeight, estimatedTime, comment } =
+          exerciseGoal;
+
+        const newDocRef = collection(db, 'exerciseGoals').withConverter(exerciseGoalConverter);
+        const result = await addDoc(
+          newDocRef,
+          new ExerciseGoal(exerciseId, targetSets, targetReps, targetWeight, estimatedTime, comment)
+        );
+        copiedExerciseGoals.push(result.id);
+      })
     );
-  },
-};
+
+    const workoutRef = collection(db, 'workouts').withConverter(workoutConverter);
+    const result = await addDoc(workoutRef, new Workout(workout.title, copiedExerciseGoals));
+
+    await setDoc(doc(db, 'workouts', result.id), {
+      ...workout,
+    });
+
+    await updateDoc(doc(db, 'users', req.params.userId), {
+      workouts: arrayUnion(result.id),
+    });
+
+    res.status(200).json({
+      code: 200,
+      message: `Workout copied successfully`,
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ code: 500, message: 'Something went wrong while copying workout' });
+  }
+});
 
 module.exports = router;

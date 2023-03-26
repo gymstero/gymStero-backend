@@ -20,7 +20,7 @@ const {
 } = require('firebase/firestore');
 const { db } = require('../../firebase/config');
 const { bothSameDate } = require('../../helper/helper');
-const { Workout } = require('../../model/Workout');
+const { Workout, workoutConverter } = require('../../model/Workout');
 
 router.get('/:id/setting', async (req, res) => {
   console.info('GET /api/user/:id/setting requested');
@@ -307,7 +307,7 @@ router.get('/:id', async (req, res) => {
   if (req.query.username) {
     userQuery = query(collection(db, 'users'), where('username', '==', req.query.username));
   } else {
-    userQuery = query(collection(db, 'users'), orderBy('numOfFollowers'), limit(10));
+    userQuery = query(collection(db, 'users'), orderBy('numOfFollowers', 'desc'), limit(10));
   }
 
   let users = [];
@@ -390,35 +390,5 @@ router.put('/:userId/unfollowing/:id', async (req, res) => {
     res.status(500).json({ code: 500, message: 'Something went wrong while getting users in DB' });
   }
 });
-
-const workoutConverter = {
-  toFirestore: (workout) => {
-    return {
-      title: workout.title,
-      exerciseGoals: workout.exerciseGoals,
-      startDate: workout.startDate,
-      endDate: workout.endDate,
-      daysInWeek: workout.daysInWeek,
-      reminder: workout.reminder,
-      createdAt: workout.createdAt,
-      schedule: workout.schedule,
-      totalWorkoutTime: workout.totalWorkoutTime,
-    };
-  },
-  fromFirestore: (snapshot, options) => {
-    const data = snapshot.data(options);
-    return new Workout(
-      data.title,
-      data.exerciseGoals,
-      data.startDate,
-      data.endDate,
-      data.daysInWeek,
-      data.reminder,
-      data.createdAt,
-      data.schedule,
-      data.totalWorkoutTime
-    );
-  },
-};
 
 module.exports = router;
