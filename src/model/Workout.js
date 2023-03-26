@@ -28,4 +28,34 @@ const Day = {
   Sunday: 'Sunday',
 };
 
-module.exports = { Workout, Reminder, Day };
+const workoutConverter = {
+  toFirestore: (workout) => {
+    return {
+      title: workout.title,
+      exerciseGoals: workout.exerciseGoals,
+      startDate: workout.startDate,
+      endDate: workout.endDate,
+      daysInWeek: workout.daysInWeek,
+      reminder: workout.reminder,
+      createdAt: workout.createdAt,
+      schedule: workout.schedule,
+      totalWorkoutTime: workout.totalWorkoutTime,
+    };
+  },
+  fromFirestore: (snapshot, options) => {
+    const data = snapshot.data(options);
+    return new Workout(
+      data.title,
+      data.exerciseGoals,
+      data.startDate,
+      data.endDate,
+      data.daysInWeek,
+      data.reminder,
+      data.createdAt,
+      data.schedule,
+      data.totalWorkoutTime
+    );
+  },
+};
+
+module.exports = { Workout, workoutConverter, Reminder, Day };

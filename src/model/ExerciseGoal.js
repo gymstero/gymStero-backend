@@ -9,4 +9,28 @@ class ExerciseGoal {
   }
 }
 
-module.exports.ExerciseGoal = ExerciseGoal;
+const exerciseGoalConverter = {
+  toFirestore: (exerciseGoal) => {
+    return {
+      exerciseId: exerciseGoal.exerciseId,
+      targetSets: exerciseGoal.targetSets,
+      targetReps: exerciseGoal.targetReps,
+      targetWeight: exerciseGoal.targetWeight,
+      estimatedTime: exerciseGoal.estimatedTime,
+      comment: exerciseGoal.comment,
+    };
+  },
+  fromFirestore: (snapshot, options) => {
+    const data = snapshot.data(options);
+    return new ExerciseGoal(
+      data.exerciseId,
+      data.targetSets,
+      data.targetReps,
+      data.targetWeight,
+      data.estimatedTime,
+      data.comment
+    );
+  },
+};
+
+module.exports = { ExerciseGoal, exerciseGoalConverter };
