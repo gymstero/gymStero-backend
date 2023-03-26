@@ -337,8 +337,8 @@ router.put('/:workoutId/schedule-delete', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
-  console.info('GET /api/workout requested');
+router.get('/user/:id', async (req, res) => {
+  console.info('GET /api/workout/user/:id requested');
 
   const userQuery = query(collection(db, 'users'), where('publicUser', '==', true), limit(10));
   try {
@@ -348,12 +348,13 @@ router.get('/', async (req, res) => {
     let publicWorkouts = [];
     userSnapshot.forEach((doc) => {
       const user = doc.data();
-      if (user.publicUser) {
+      if (user.publicUser && user.id !== req.params.id) {
         publicUsers.push(user);
       }
     });
     publicUsers.sort((a, b) => b.numOfFollowers - a.numOfFollowers);
 
+    //Limit the number of workouts per user
     publicUsers.forEach((user) => {
       let firstThreeWorkouts = [];
       if (user.workouts.length > 3) {
@@ -364,12 +365,13 @@ router.get('/', async (req, res) => {
       publicWorkouts.push(...firstThreeWorkouts);
     });
 
+    //Limit the total workouts to search (Firestore limit)
     const firstTenWorkouts = publicWorkouts.slice(0, 10);
     let workoutQuery = query(
       collection(db, 'workouts'),
       where(documentId(), 'in', firstTenWorkouts)
     );
-    
+
     let workouts = [];
     const workoutSnapshot = await getDocs(workoutQuery);
     workoutSnapshot.forEach((doc) => {
