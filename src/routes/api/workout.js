@@ -164,7 +164,7 @@ router.get('/:id/exercise-goals', async (req, res) => {
     if (workout.exerciseGoals.length > 0) {
       const exerciseGoalQuery = query(
         collection(db, 'exerciseGoals'),
-        where(documentId(), 'in', workout.exerciseGoals)
+        where(documentId(), 'in', workout.exerciseGoals.slice(0, 10))
       );
       const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);
 
@@ -178,7 +178,7 @@ router.get('/:id/exercise-goals', async (req, res) => {
       if (exerciseIds.length > 0) {
         const exerciseQuery = query(
           collection(db, 'exercises'),
-          where(documentId(), 'in', exerciseIds)
+          where(documentId(), 'in', exerciseIds.slice(0, 10))
         );
         const exerciseSnapshot = await getDocs(exerciseQuery);
         exerciseSnapshot.forEach((each) => {
@@ -285,7 +285,7 @@ router.put('/:id/schedule', async (req, res) => {
 
     const exerciseGoalQuery = query(
       collection(db, 'exerciseGoals'),
-      where(documentId(), 'in', workout.exerciseGoals)
+      where(documentId(), 'in', workout.exerciseGoals.slice(0, 10))
     );
 
     const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);

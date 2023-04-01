@@ -60,8 +60,9 @@ router.get('/:id/profile', async (req, res) => {
 
     const workoutQuery = query(
       collection(db, 'workouts'),
-      where(documentId(), 'in', user.workouts)
+      where(documentId(), 'in', user.workouts.slice(0, 10))
     );
+
     let workouts = [];
     const today = new Date();
     const workoutSnapshot = await getDocs(workoutQuery);
@@ -98,7 +99,7 @@ router.get('/:id/profile', async (req, res) => {
         let exercises = [];
         const exerciseQuery = query(
           collection(db, 'exerciseGoals'),
-          where(documentId(), 'in', workout.exerciseGoals)
+          where(documentId(), 'in', workout.exerciseGoals.slice(0, 10))
         );
         const exerciseGoalSnapshot = await getDocs(exerciseQuery);
         exerciseGoalSnapshot.forEach((doc) => {
@@ -139,7 +140,10 @@ router.get('/:id/workouts', async (req, res) => {
     }
 
     if (workoutIds.length > 0) {
-      const workoutQuery = query(collection(db, 'workouts'), where(documentId(), 'in', workoutIds));
+      const workoutQuery = query(
+        collection(db, 'workouts'),
+        where(documentId(), 'in', workoutIds.slice(0, 10))
+      );
       const workoutQuerySnapshot = await getDocs(workoutQuery);
 
       workoutQuerySnapshot.forEach((doc) => {
@@ -152,7 +156,7 @@ router.get('/:id/workouts', async (req, res) => {
         if (workout.exerciseGoals.length > 0) {
           const exerciseGoalQuery = query(
             collection(db, 'exerciseGoals'),
-            where(documentId(), 'in', workout.exerciseGoals)
+            where(documentId(), 'in', workout.exerciseGoals.slice(0, 10))
           );
           const exerciseGoalSnapshot = await getDocs(exerciseGoalQuery);
 
@@ -272,7 +276,7 @@ router.get('/:userId/workout-schedule', async (req, res) => {
 
     const workoutQuery = query(
       collection(db, 'workouts'),
-      where(documentId(), 'in', user.workouts)
+      where(documentId(), 'in', user.workouts.slice(0, 10))
     );
     const workoutSnapshot = await getDocs(workoutQuery);
 
@@ -414,4 +418,3 @@ router.get('/:id/get-following', async (req, res) => {
 });
 
 module.exports = router;
-
