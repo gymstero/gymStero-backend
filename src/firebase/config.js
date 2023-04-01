@@ -3,7 +3,7 @@ const { getFirestore } = require('firebase/firestore');
 const admin = require('firebase-admin');
 require('dotenv').config();
 
-const private_key = JSON.parse(process.env.PRIVATE_KEY);
+const { private_key } = JSON.parse(process.env.PRIVATE_KEY);
 
 const firebaseConfig = {
   apiKey: process.env.API_KEY,
