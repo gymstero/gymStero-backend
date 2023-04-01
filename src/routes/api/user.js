@@ -56,7 +56,9 @@ router.get('/:id/profile', async (req, res) => {
 
   try {
     const snapshot = await getDoc(doc(db, 'users', req.params.id));
-    const user = snapshot.data();
+    let user = snapshot.data();
+    user.password = undefined;
+    user.email = undefined;
 
     const workoutQuery = query(
       collection(db, 'workouts'),
@@ -403,7 +405,7 @@ router.get('/:id/get-following', async (req, res) => {
   try {
     const snapshot = await getDoc(doc(db, 'users', req.params.id));
     const user = snapshot.data();
-    console.log(user);
+
     res.status(200).json({
       code: 200,
       message: `Following users sent`,
@@ -416,5 +418,53 @@ router.get('/:id/get-following', async (req, res) => {
       .json({ code: 500, message: 'Something went wrong while getting following users in DB' });
   }
 });
+
+router.get('/:id/get-connections', async (req, res) => {
+  console.info('GET /api/user/:id/get-connections requested');
+
+  try {
+    const snapshot = await getDoc(doc(db, 'users', req.params.id));
+    const user = snapshot.data();
+
+    const followingQuery = query(
+      collection(db, 'users'),
+      where(documentId(), 'in', user.following.slice(0, 10))
+    );
+    const followingSnapshot = await getDocs(followingQuery);
+    let followingUsers = [];
+    followingSnapshot.forEach((doc) => {
+      let user = doc.data();
+      user.password = undefined;
+      user.email = undefined;
+      followingUsers.push(user);
+    });
+
+    let followers = [];
+    const followerQuery = query(collection(db, 'users'));
+    const followerSnapshot = await getDocs(followerQuery);
+    followerSnapshot.forEach((doc) => {
+      let user = doc.data();
+      if (user.following.includes(req.params.id)) {
+        user.password = undefined;
+        user.email = undefined;
+        followers.push(user);
+      }
+    });
+
+    res.status(200).json({
+      code: 200,
+      message: `Following user data sent`,
+      followingUsers,
+      followers,
+    });
+  } catch (err) {
+    console.error(err.message);
+    res
+      .status(500)
+      .json({ code: 500, message: 'Something went wrong while getting following users in DB' });
+  }
+});
+
+
 
 module.exports = router;
